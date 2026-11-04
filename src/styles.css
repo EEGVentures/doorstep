@@ -99,11 +99,14 @@
   @media (min-width: 640px) { .bento > * { aspect-ratio: 1 / 1; } }
   .bento > .tile-wide { @apply col-span-2; aspect-ratio: 2 / 1 !important; }
   .bento > .tile-big { @apply col-span-2 lg:row-span-2; aspect-ratio: 1 / 1 !important; }
+  .bento > .tile-full { @apply col-span-2 lg:col-span-4; aspect-ratio: 2 / 1 !important; }
+  .seg-chip { @apply flex-1 whitespace-nowrap px-2 text-center text-[13px] sm:flex-none sm:px-4 sm:text-sm; }
   /* Desktop: square rows sized from the container width, so wide tiles match the small tiles beside them. */
   .bento-wrap { container-type: inline-size; }
   @media (min-width: 1024px) {
     .bento { grid-auto-rows: calc((100cqw - 3 * 1rem) / 4); }
-    .bento > *, .bento > .tile-wide, .bento > .tile-big { aspect-ratio: auto !important; }
+    .bento > *, .bento > .tile-wide, .bento > .tile-big, .bento > .tile-full { aspect-ratio: auto !important; }
+
   }
   .tile { @apply relative block overflow-hidden rounded-[20px] bg-ink;
     box-shadow: 0 1px 2px rgba(26, 16, 48, 0.06), 0 14px 30px -18px rgba(26, 16, 48, 0.35);
@@ -196,6 +199,30 @@
   .eyebrow { @apply text-sm font-medium text-muted; }
 }
 
+/* Doorstep signature 1: the lead tile is house-shaped, the same gable as the emblem, with the date as the house sign. */
+.tile-house { clip-path: polygon(0 13%, 50% 0, 100% 13%, 100% 100%, 0 100%); border-radius: 0 0 28px 28px !important; box-shadow: none; }
+.house-sign { left: 50%; top: 8%; transform: translateX(-50%); }
+@media (min-width: 1024px) { .tile-house { clip-path: polygon(0 11%, 50% 0, 100% 11%, 100% 100%, 0 100%); } .house-sign { top: 6.5%; } }
+
+/* Doorstep signature 2: opening an event plays as a door opening onto the night. The new page opens from the
+   middle like double doors while the photo grows into place. Only for tile-to-event navigation. */
+html[data-vt='door']::view-transition-old(root) { animation: 260ms var(--ease-out) both door-dim; }
+html[data-vt='door']::view-transition-new(root) { animation: 520ms var(--ease-drawer) both door-open; }
+@keyframes door-open { from { clip-path: inset(0 50% 0 50%); } to { clip-path: inset(0 0 0 0); } }
+@keyframes door-dim { to { opacity: 0.35; } }
+
+/* Door pass (wallet): ink door with the emblem's gable, a faint photo through the "glass", a white letterbox panel
+   for the code, and the coral-to-amber doorstep line underneath. Gradient only as a line, never a fill. */
+.door-pass-wrap { display: flex; flex-direction: column; align-items: stretch; }
+.door-pass { position: relative; overflow: hidden; border-radius: 0 0 26px 26px;
+  clip-path: polygon(0 7%, 50% 0, 100% 7%, 100% 100%, 0 100%);
+  background: radial-gradient(120% 70% at 30% 0%, #2B1F45 0%, #1A1030 65%); }
+.door-pass-photo { position: absolute; inset: 0 0 auto; height: 58%; width: 100%; object-fit: cover; opacity: 0.32;
+  -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent); mask-image: linear-gradient(to bottom, #000 30%, transparent); }
+.letterbox { box-shadow: inset 0 1px 0 #fff, 0 10px 24px -14px rgba(0, 0, 0, 0.5); }
+.doorstep-line { display: block; height: 4px; margin: 8px 6% 0; border-radius: 999px; background: linear-gradient(90deg, #FF5A5F, #FF8A3D);
+  box-shadow: 0 6px 14px -4px rgba(255, 90, 95, 0.45); }
+
 /* Shared element: the tile photo grows into the event hero; the hero caption fades in on top of it. */
 .hero-caption { view-transition-name: hero-caption; background: linear-gradient(to top, rgba(14, 8, 28, 0.88) 0%, rgba(14, 8, 28, 0.5) 55%, rgba(14, 8, 28, 0) 100%); }
 ::view-transition-new(hero-caption) { animation-delay: 120ms; animation-fill-mode: both; }
@@ -216,4 +243,5 @@
   .seg-active { transition: none; }
   .skeleton { animation: none; }
   ::view-transition-group(*) { animation: none; }
+  html[data-vt='door']::view-transition-new(root) { animation-name: fade-in; }
 }

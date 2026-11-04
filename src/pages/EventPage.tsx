@@ -1,21 +1,36 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth, useMembership } from '@/lib/auth';
 import { eventDateLong, eventTime, pounds2 } from '@/lib/format';
 import { photoName } from '@/components/EventTile';
+import { travel, useArea } from '@/lib/area';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Loader, Notice, PrimaryLink } from '@/components/ui';
 import { TicketPicker, type TicketTypeView } from '@/components/TicketPicker';
 
+/**
+ * Seeds the event page from the listing the customer just tapped, so the hero (and the shared photo transition)
+ * renders on the first frame instead of a skeleton. Tickets and full venue details arrive with the real query.
+ */
+function fromListing(qc: ReturnType<typeof useQueryClient>, slug?: string) {
+  const l = (qc.getQueryData(['listings']) as any[] | undefined)?.find((x) => x.slug === slug);
+  if (!l) return undefined;
+  return { id: l.id, slug: l.slug, title: l.title, description: null, image_url: l.image_url, starts_at: l.starts_at, doors_at: l.doors_at, status: l.status,
+    venue: { name: l.venue_name, city: l.venue_city, address_line: l.venue_address ?? null, postcode: l.venue_postcode ?? null, timezone: l.timezone, lat: l.venue_lat, lng: l.venue_lng },
+    ticket_types: [], placeholder: true };
+}
+
 export function useEvent(slug: string | undefined) {
+  const qc = useQueryClient();
   return useQuery({
     queryKey: ['event', slug],
     enabled: Boolean(slug),
+    placeholderData: () => fromListing(qc, slug),
     queryFn: async () => {
       const { data, error } = await supabase.from('events')
-        .select('id, slug, title, description, image_url, starts_at, doors_at, status, venue:venues(name, city, address_line, postcode, timezone), ticket_types(id, name, price_pence, fee_pence, face_value_pence, capacity, sold, held, max_per_order, sort_order)')
+        .select('id, slug, title, description, image_url, starts_at, doors_at, status, venue:venues(name, city, address_line, postcode, timezone, lat, lng), ticket_types(id, name, price_pence, fee_pence, face_value_pence, capacity, sold, held, max_per_order, sort_order)')
         .eq('slug', slug!).maybeSingle();
       if (error) throw error;
       return data as any;
@@ -25,6 +40,8 @@ export function useEvent(slug: string | undefined) {
 
 export function EventHeader({ ev }: { ev: any }) {
   const tz = ev.venue.timezone;
+  const { area } = useArea();
+  const away = travel(area, ev.venue.lat, ev.venue.lng);
   return (
     <div className="space-y-4">
       <div className={`tile tile-hero aspect-[4/5] sm:aspect-[16/9] ${ev.image_url ? "!bg-transparent" : "tile-wash"}`}>
@@ -33,7 +50,7 @@ export function EventHeader({ ev }: { ev: any }) {
         <div className={`absolute inset-x-0 bottom-0 rounded-b-[28px] p-5 sm:p-8 ${ev.image_url ? 'hero-caption pt-24 text-white sm:pt-32' : 'text-ink'}`}>
           <p className={`text-sm font-medium tabular-nums sm:text-base ${ev.image_url ? 'text-white/80' : 'text-ink/70'}`}>{eventDateLong(ev.starts_at, tz)}</p>
           <h1 className={`mt-1 text-3xl font-bold leading-[1.08] sm:text-5xl ${ev.image_url ? '!text-white' : ''}`}>{ev.title}</h1>
-          <p className={`mt-1 ${ev.image_url ? 'text-white/80' : 'text-ink/70'}`}>{ev.venue.name}, {ev.venue.city}</p>
+          <p className={`mt-1 ${ev.image_url ? 'text-white/80' : 'text-ink/70'}`}>{ev.venue.name}, {ev.venue.city}{away && <span className="tabular-nums"> · {away.label} from {area!.outcode}</span>}</p>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -73,15 +90,15 @@ function BookingPanel({ ev, here }: { ev: any; here: string }) {
         : ev.status !== 'on_sale' && ev.status !== 'sold_out' ? <Notice>Tickets are not on sale right now.</Notice>
         : !session ? (
           <>
-            <h2 className="text-xl font-semibold">Book with Doorstep</h2>
-            <p className="text-muted">Sign in or create an account to book.</p>
+            <h2 className="text-xl font-semibold">Fancy it?</h2>
+            <p className="text-muted">Sign in or make an account to book. It takes a minute.</p>
             <PrimaryLink to={`/signin?next=${encodeURIComponent(here)}`}>Sign in to book</PrimaryLink>
           </>
         ) : member.isPending ? <Loader mode="inline" label="Checking membership" />
         : member.data ? <TicketPicker types={toView(ev.ticket_types)} />
         : (
           <>
-            <h2 className="text-xl font-semibold">Members book tickets</h2>
+            <h2 className="text-xl font-semibold">This one’s for members</h2>
             <p className="text-muted">Join Doorstep to book this and every other event at member prices.</p>
             <PrimaryLink to={`/join?next=${encodeURIComponent(here)}`}>Become a member</PrimaryLink>
           </>
@@ -113,8 +130,8 @@ export default function EventPage() {
   return (
     <div className="ambient grid gap-8 pb-24 lg:grid-cols-[1fr_380px] lg:pb-0">
       <EventHeader ev={ev} />
-      <aside className="card hidden h-fit p-6 lg:sticky lg:top-24 lg:block"><BookingPanel ev={ev} here={here} /></aside>
-      <BuyBar from={soldOut ? null : from} label={soldOut ? 'Sold out' : 'Get tickets'} onOpen={() => setSheet(true)} disabled={soldOut && ev.status !== 'on_sale'} tucked={sheet} />
+      <aside className="card hidden h-fit p-6 lg:sticky lg:top-24 lg:block">{q.isPlaceholderData ? <Loader mode="inline" label="Getting tickets" /> : <BookingPanel ev={ev} here={here} />}</aside>
+      <BuyBar from={soldOut ? null : from} label={soldOut ? 'Sold out' : 'Get tickets'} onOpen={() => setSheet(true)} disabled={soldOut && ev.status !== 'on_sale'} tucked={sheet || q.isPlaceholderData} />
       <BottomSheet open={sheet} onClose={close} label="Book tickets">
         <h2 className="mb-1 text-lg font-semibold">{ev.title}</h2>
         <p className="mb-4 text-sm tabular-nums text-muted">{eventDateLong(ev.starts_at, ev.venue.timezone)}</p>

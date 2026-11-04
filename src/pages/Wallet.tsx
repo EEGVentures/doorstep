@@ -20,6 +20,72 @@ function Qr({ value }: { value: string }) {
   return src ? <img src={src} alt={`Ticket code ${value}`} className="mx-auto w-56 rounded-lg bg-white" /> : <div className="h-56" />;
 }
 
+/** Live countdown to doors. Ticks every second inside the last day, every minute before that. */
+function useNow(fine: boolean) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), fine ? 1000 : 30_000); return () => clearInterval(t); }, [fine]);
+  return now;
+}
+function countdown(ms: number) {
+  if (ms <= 0) return null;
+  const s = Math.floor(ms / 1000), d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  const p = (n: number) => String(n).padStart(2, '0');
+  return d > 0 ? [`${d}d`, `${p(h)}h`, `${p(m)}m`] : [`${p(h)}h`, `${p(m)}m`, `${p(sec)}s`];
+}
+
+/**
+ * Door pass: the ticket is a door. Gable top like the emblem, ink panel, a countdown to doors,
+ * the code in the letterbox panel once it's released (48h before doors), and the gradient doorstep line underneath.
+ */
+function DoorPass({ t }: { t: WalletTicket }) {
+  const doors = new Date(t.doors_at).getTime();
+  const now = useNow(doors - Date.now() < 86400e3);
+  const left = countdown(doors - now);
+  const revealed = Boolean(t.barcode);
+  const revoked = t.status === 'revoked';
+  return (
+    <li className={`door-pass-wrap ${revoked ? 'opacity-60' : ''}`}>
+      <article className="door-pass text-white">
+        {t.image_url && <img src={t.image_url} alt="" className="door-pass-photo" />}
+        <div className="relative flex items-center justify-between px-6 pt-14 text-xs text-white/70">
+          <span className="inline-flex items-center gap-2"><img src="/brand/doorstep-emblem-v4-white.png" alt="" className="h-5 w-5" />Door pass</span>
+          <span className="tabular-nums">{t.order_ref}</span>
+        </div>
+        <div className="relative space-y-1 px-6 pt-6">
+          <p className="text-sm tabular-nums text-white/75">{eventDateLong(t.starts_at, t.timezone)}</p>
+          <h2 className="font-display text-2xl font-semibold leading-tight text-white sm:text-3xl" style={{ textWrap: 'balance' }}>{t.event_title}</h2>
+          <p className="text-white/80">{t.venue_name}, {t.venue_city}</p>
+        </div>
+        <div className="relative px-6 pt-6">
+          {left ? (
+            <>
+              <p className="text-sm text-white/70">Doors open in</p>
+              <p className="font-display text-4xl font-semibold tabular-nums tracking-tight text-white" aria-live="off">
+                {left.map((x, k) => <span key={k} className={k ? 'ml-3' : ''}>{x}</span>)}
+              </p>
+            </>
+          ) : <p className="font-display text-2xl font-semibold text-white">Doors are open. Have a good night.</p>}
+          <p className="mt-1 text-sm tabular-nums text-white/70">Doors {eventTime(t.doors_at, t.timezone)} · Starts {eventTime(t.starts_at, t.timezone)}</p>
+        </div>
+        <div className="relative p-3 pt-6">
+          <div className="letterbox rounded-[22px] bg-white p-5 text-center text-ink">
+            {revoked ? <p className="font-medium">This pass was refunded or cancelled and no longer opens the door.</p>
+              : revealed ? (<><Qr value={t.barcode!} /><p className="mt-2 font-mono text-lg tracking-[0.2em]">{t.barcode}</p><p className="text-xs text-muted">Show this at the door. Brightness up helps.</p></>)
+              : (
+                <div className="py-4">
+                  <p className="font-semibold">Your code appears here {untilText(t.reveal_at)}</p>
+                  <p className="text-sm tabular-nums text-muted">{eventDateLong(t.reveal_at, t.timezone)}, {eventTime(t.reveal_at, t.timezone)}. We’ll email you when it lands.</p>
+                </div>
+              )}
+            <p className="mt-3 border-t border-line pt-3 text-xs text-muted">{t.ticket_type} · {[t.holder_first_name, t.holder_last_name].filter(Boolean).join(' ')}</p>
+          </div>
+        </div>
+      </article>
+      <span className="doorstep-line" aria-hidden="true" />
+    </li>
+  );
+}
+
 export default function Wallet() {
   const { session, ready } = useAuth();
   const [params] = useSearchParams();
@@ -42,39 +108,16 @@ export default function Wallet() {
 
   return (
     <div className="ambient space-y-6">
-      <h1 className="text-3xl font-bold">Your tickets</h1>
-      {waiting && <Notice>Payment received. We’re issuing your tickets for order {paidRef}; this takes a few seconds.</Notice>}
-      {q.isPending && <Loader label="Loading tickets" />}
-      {q.isError && <Notice tone="error">We couldn’t load your tickets. Please refresh.</Notice>}
-      {q.isSuccess && upcoming.length === 0 && !waiting && <Empty title="No tickets yet"><div className="mt-4"><PrimaryLink to="/">Find a night out</PrimaryLink></div></Empty>}
-      <ul className="grid gap-5 md:grid-cols-2">
-        {upcoming.map((t) => {
-          const revealed = Boolean(t.barcode);
-          return (
-            <li key={t.id} className={`card overflow-hidden ${t.status === 'revoked' ? 'opacity-60' : ''}`}>
-              <div className={`relative h-44 ${t.image_url ? 'bg-ink' : 'tile-wash'}`}>
-                {t.image_url && <img src={t.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />}
-                <div className="glass-dark absolute inset-x-3 bottom-3 rounded-[20px] p-4">
-                  <p className="text-xs uppercase tracking-[0.12em] text-white/80">{eventDateLong(t.starts_at, t.timezone)}</p>
-                  <h2 className="mt-1 font-display text-xl font-semibold text-white">{t.event_title}</h2>
-                  <p className="text-sm text-white/90">{t.venue_name}, {t.venue_city} · Doors {eventTime(t.doors_at, t.timezone)}</p>
-                </div>
-              </div>
-              <div className="space-y-3 p-5 text-center">
-                {t.status === 'revoked' ? <Notice>This ticket was refunded or cancelled and is no longer valid.</Notice>
-                  : revealed ? (<><Qr value={t.barcode!} /><p className="font-mono text-lg tracking-[0.2em]">{t.barcode}</p></>)
-                  : (
-                    <div className="tile-wash rounded-[22px] px-4 py-8">
-                      <img src="/brand/doorstep-emblem-v4-gradient.png" alt="" className="mx-auto mb-3 h-12 w-12" />
-                      <p className="font-semibold">Your ticket lands {untilText(t.reveal_at)}</p>
-                      <p className="text-sm text-muted">{eventDateLong(t.reveal_at, t.timezone)}, {eventTime(t.reveal_at, t.timezone)}. We’ll email you.</p>
-                    </div>
-                  )}
-                <p className="text-sm text-muted">{t.ticket_type} · {[t.holder_first_name, t.holder_last_name].filter(Boolean).join(' ')} · Order {t.order_ref}</p>
-              </div>
-            </li>
-          );
-        })}
+      <div>
+        <h1 className="text-3xl font-bold sm:text-4xl">Your door passes</h1>
+        <p className="text-muted">Each pass shows its code 48 hours before doors.</p>
+      </div>
+      {waiting && <Notice>Payment received. We’re issuing your passes for order {paidRef}; this takes a few seconds.</Notice>}
+      {q.isPending && <Loader label="Loading your passes" />}
+      {q.isError && <div className="card flex items-center justify-between gap-3 p-6"><p className="font-medium">We couldn’t load your passes.</p><button className="btn-secondary !py-2" onClick={() => q.refetch()}>Try again</button></div>}
+      {q.isSuccess && upcoming.length === 0 && !waiting && <Empty title="No nights booked yet"><div className="mt-4"><PrimaryLink to="/">Find a night out</PrimaryLink></div></Empty>}
+      <ul className="grid gap-8 md:grid-cols-2 lg:max-w-4xl">
+        {upcoming.map((t) => <DoorPass key={t.id} t={t} />)}
       </ul>
     </div>
   );

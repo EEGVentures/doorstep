@@ -32,7 +32,7 @@ const router = (DEMO ? createMemoryRouter : createBrowserRouter)([{
     { path: '/ops', element: <Ops /> },
     { path: '/legal/:doc', element: <Legal /> },
     { path: '/press', element: <Press /> },
-    { path: '*', element: <Empty title="Page not found">That page doesn’t exist.</Empty> },
+    { path: '*', element: <Empty title="Wrong door">That page doesn’t exist. Head back to what’s on near you.</Empty> },
   ],
 }]);
 

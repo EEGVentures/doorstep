@@ -34,3 +34,25 @@ Nathan approved the critique fixes on 4 Nov 2026. Before and after screenshots a
 - **Bottom sheet**: drag writes the transform and backdrop opacity straight to the DOM. Pulling upwards meets growing friction (a log curve, never a hard stop). The sheet takes one pointer at a time and uses pointer capture. It dismisses past a quarter of its height, or on a flick faster than 0.11px/ms measured over the last 100ms, so a slow drag that stops springs back. Text selection is blocked while dragging. It opens in 460ms on the drawer curve and closes faster, in 240ms ease-out.
 - **Buy bar**: rises in with `@starting-style` and tucks away while the sheet is open.
 - **Micro details**: the quantity digit rolls in the direction of the change. The primary button label swaps through a 3px blur. The header's active pill is one element with a shared `view-transition-name`, so it slides between links on navigation, and the header itself stays still while the page crossfades.
+
+## Brand push: "iconically Doorstep", 4 Nov 2026
+
+Nathan asked for the app to feel like Doorstep and not a listings page. Three ideas:
+
+1. **Close to home.** A first visit asks "Where's your doorstep?" and takes a postcode. Only the outcode is used, through postcodes.io, and it's stored on the device (`src/lib/area.ts`). After that:
+   - every tile shows a door-to-door hint ("9 min walk", "16 min drive");
+   - the grid is headed "Tonight / This weekend / This week on your doorstep";
+   - nights over 30 km away move to a "Worth the trip" row.
+
+   Venue coordinates come from `venues.lat/lng` through `event_listings` (migration 20261106090300).
+2. **The door.** The emblem's gable is the shape system:
+   - The lead tile is house-shaped, with the date as the house sign. The lead is always the soonest night with a photo, and a photo-less lead goes ink.
+   - Tapping a tile opens the event like double doors (`html[data-vt=door]`), while the photo grows into the hero. The event page is seeded from the tapped listing, so the transition never lands on a skeleton.
+   - Tickets are **door passes**: an ink door with the gable, a live countdown to doors, the code in a white letterbox panel from 48h, and the coral-to-amber "doorstep line" underneath. The gradient is used only as a line.
+3. **Voice.** Labels speak like a local friend:
+   - "Fancy it?" on the booking panel;
+   - "This one's for members" when booking needs a membership;
+   - "Wrong door" on the 404 page;
+   - "Your door passes" and "No nights booked yet" in the wallet.
+
+The preview build (`scripts/build-demo.sh`) shows all of it with sample data.

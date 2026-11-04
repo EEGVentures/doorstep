@@ -1,14 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth, useMembership } from '@/lib/auth';
+import { lookupArea, NEAR_KM, travel, useArea, type Area } from '@/lib/area';
 import { Empty, Loader, PrimaryLink } from '@/components/ui';
 import { EventTile, TileSkeleton, type TileSize } from '@/components/EventTile';
 
 export type Listing = {
   id: string; slug: string; title: string; image_url: string | null; category: string | null; starts_at: string; doors_at: string;
   status: string; venue_name: string; venue_city: string; timezone: string; from_price_pence: number | null; tickets_left: number;
+  venue_lat?: number | null; venue_lng?: number | null;
 };
 
 /** True once `on` has stayed true for `ms`. The waving loader only appears for waits over a second. */
@@ -33,7 +35,7 @@ export function bentoSizes(n: number, maxWide = 3): TileSize[] {
     const left = n - out.length;
     if (left >= 3 && (wide < maxWide || left === 3)) { const r: TileSize[] = ['wide', 'sm', 'sm']; out.push(...(row % 2 ? r.reverse() : r)); wide++; }
     else if (left === 2) out.push('wide', 'wide');
-    else if (left === 1) out.push('wide');
+    else if (left === 1) out.push('full');
     else out.push('sm', 'sm', 'sm', 'sm');
     row++;
   }
@@ -41,16 +43,17 @@ export function bentoSizes(n: number, maxWide = 3): TileSize[] {
 }
 
 /**
- * Glass segmented filter. A white-on-ink copy of the list sits on top, clipped to the selected city, and the clip
- * moves between cities. The text changes colour exactly where the pill is, which colour transitions on each chip can't do.
+ * Glass segmented control. A white-on-ink copy of the options sits on top, clipped to the selected one, and the clip
+ * moves between options. The text changes colour exactly where the pill is, which per-chip colour transitions can't do.
  */
-function CityFilter({ options, value, onChange }: { options: string[]; value: string; onChange: (c: string) => void }) {
+function Segmented<T extends string>({ options, value, onChange, label }: { options: { value: T; label: string }[]; value: T; onChange: (v: T) => void; label: string }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [clip, setClip] = useState<string | null>(null);
+  const sig = options.map((o) => o.value).join('|');
   useLayoutEffect(() => {
     const measure = () => {
       const box = wrap.current;
-      const el = box?.querySelector<HTMLButtonElement>(`[data-city="${CSS.escape(value)}"]`);
+      const el = box?.querySelector<HTMLButtonElement>(`[data-v="${CSS.escape(value)}"]`);
       if (!box || !el) return;
       const right = box.clientWidth - el.offsetLeft - el.offsetWidth;
       const bottom = box.clientHeight - el.offsetTop - el.offsetHeight;
@@ -59,16 +62,13 @@ function CityFilter({ options, value, onChange }: { options: string[]; value: st
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, [value, options.join('|')]);
-  const label = (c: string) => (c === 'all' ? 'Everywhere' : c);
+  }, [value, sig]);
   return (
-    <div ref={wrap} className="glass relative inline-flex max-w-full flex-wrap gap-1 rounded-full p-1" role="group" aria-label="Filter by city">
-      {options.map((c) => (
-        <button key={c} data-city={c} onClick={() => onChange(c)} aria-pressed={value === c} className="chip">{label(c)}</button>
-      ))}
+    <div ref={wrap} className="glass relative flex w-full flex-nowrap gap-1 rounded-full p-1 sm:inline-flex sm:w-auto" role="group" aria-label={label}>
+      {options.map((o) => <button key={o.value} data-v={o.value} onClick={() => onChange(o.value)} aria-pressed={value === o.value} className="chip seg-chip">{o.label}</button>)}
       {clip && (
-        <div aria-hidden="true" className="seg-active pointer-events-none absolute inset-0 z-[2] flex flex-wrap gap-1 rounded-full p-1" style={{ clipPath: clip }}>
-          {options.map((c) => <span key={c} className="chip !text-white">{label(c)}</span>)}
+        <div aria-hidden="true" className="seg-active pointer-events-none absolute inset-0 z-[2] flex flex-nowrap gap-1 rounded-full p-1" style={{ clipPath: clip }}>
+          {options.map((o) => <span key={o.value} className="chip seg-chip !text-white">{o.label}</span>)}
         </div>
       )}
     </div>
@@ -96,12 +96,56 @@ function useReveal(root: React.RefObject<HTMLElement | null>, deps: unknown[]) {
   }, deps);
 }
 
+type When = 'any' | 'tonight' | 'weekend' | 'week';
+const WHEN: { value: When; label: string }[] = [
+  { value: 'any', label: 'Any night' }, { value: 'tonight', label: 'Tonight' }, { value: 'weekend', label: 'This weekend' }, { value: 'week', label: 'This week' },
+];
+const HEADING: Record<When, string> = { any: 'On your doorstep', tonight: 'Tonight on your doorstep', weekend: 'This weekend on your doorstep', week: 'This week on your doorstep' };
+
+function inWindow(iso: string, when: When, now = new Date()) {
+  const t = new Date(iso);
+  if (when === 'any') return true;
+  const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
+  if (when === 'tonight') return t >= now && t.getTime() < startOfDay.getTime() + 86400e3 + 4 * 3600e3; // tonight runs to 4am
+  if (when === 'week') return t.getTime() < now.getTime() + 7 * 86400e3;
+  // This weekend: Friday 5pm to Sunday midnight (the current one if we're in it).
+  const dow = now.getDay(); // 0 Sun ... 6 Sat
+  const fri = new Date(startOfDay); fri.setDate(fri.getDate() + (dow === 0 ? -2 : dow === 6 ? -1 : 5 - dow)); fri.setHours(17);
+  const mon = new Date(fri); mon.setDate(fri.getDate() + 3); mon.setHours(0);
+  return t >= fri && t < mon;
+}
+
+/** First thing a new visitor sees: where's your doorstep? Everything after that is local. */
+function AreaPrompt({ onSet }: { onSet: (a: Area) => void }) {
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true); setErr(null);
+    try { onSet(await lookupArea(code)); } catch (x) { setErr((x as Error).message); } finally { setBusy(false); }
+  }
+  return (
+    <form onSubmit={submit} className="space-y-2" noValidate>
+      <label htmlFor="area-code" className="block font-display text-lg font-semibold text-ink">Where’s your doorstep?</label>
+      <div className="glass flex w-full max-w-md items-center gap-1 rounded-full p-1.5">
+        <input id="area-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Your postcode, like CF11 7EN"
+          autoComplete="postal-code" inputMode="text" className="min-w-0 flex-1 bg-transparent px-4 py-2 text-ink placeholder:text-muted/80 focus:outline-none" />
+        <button className="btn-primary shrink-0" disabled={busy || code.trim().length < 2}>
+          <span className="!px-5 !py-2.5"><span key={busy ? 'b' : 'i'} className="swap">{busy ? 'Finding' : 'Show me'}</span><span className="arrow" aria-hidden="true">→</span></span>
+        </button>
+      </div>
+      <p className={`text-sm ${err ? 'text-action' : 'text-muted'}`} role={err ? 'alert' : undefined}>{err ?? 'We use the first half of your postcode to show what’s close. It stays on this device.'}</p>
+    </form>
+  );
+}
+
 function MemberTile({ style }: { style?: CSSProperties }) {
   return (
     <div className="tile surface-ink reveal flex flex-col justify-between p-5 text-white" style={style}>
       <img src="/brand/doorstep-emblem-v4-white.png" alt="" className="h-8 w-8" />
       <div className="space-y-2">
-        <p className="font-display text-lg font-semibold leading-snug text-white" style={{ textWrap: 'balance' } as CSSProperties}>Members book every night out</p>
+        <p className="font-display text-lg font-semibold leading-snug text-white" style={{ textWrap: 'balance' } as CSSProperties}>Every night out on your doorstep, at member prices</p>
         <Link to="/join" className="press inline-block text-sm font-semibold text-white underline decoration-amber decoration-2 underline-offset-4">Join Doorstep →</Link>
       </div>
     </div>
@@ -109,7 +153,8 @@ function MemberTile({ style }: { style?: CSSProperties }) {
 }
 
 export default function Discover() {
-  const [city, setCity] = useState('all');
+  const { area, setArea } = useArea();
+  const [when, setWhen] = useState<When>('any');
   const [leaving, setLeaving] = useState(false);
   const stagger = useRef(true);
   const grid = useRef<HTMLDivElement>(null);
@@ -125,20 +170,26 @@ export default function Discover() {
     },
   });
   const slow = useAfter(q.isPending, 1000);
-  const cities = useMemo(() => [...new Set((q.data ?? []).map((e) => e.venue_city))].sort(), [q.data]);
-  const list = (q.data ?? []).filter((e) => city === 'all' || e.venue_city === city);
   const showMember = !(session && member.data);
-  // Stagger the entrance on first load only; a filter change just fades.
-  useEffect(() => { if (q.isSuccess) { const t = setTimeout(() => { stagger.current = false; }, 600); return () => clearTimeout(t); } }, [q.isSuccess]);
 
-  function pick(c: string) {
-    if (c === city) return;
+  const { near, far } = useMemo(() => {
+    const all = (q.data ?? []).filter((e) => inWindow(e.starts_at, when)).map((e) => ({ e, away: travel(area, e.venue_lat, e.venue_lng) }));
+    if (!area) return { near: all, far: [] as typeof all };
+    return { near: all.filter((x) => !x.away || x.away.km <= NEAR_KM), far: all.filter((x) => x.away && x.away.km > NEAR_KM) };
+  }, [q.data, when, area]);
+
+  useEffect(() => { if (q.isSuccess) { const t = setTimeout(() => { stagger.current = false; }, 600); return () => clearTimeout(t); } }, [q.isSuccess]);
+  useReveal(grid, [when, area?.outcode, q.data]);
+
+  function pick(v: When) {
+    if (v === when) return;
     setLeaving(true);
-    setTimeout(() => { setCity(c); setLeaving(false); }, 150);
+    setTimeout(() => { setWhen(v); setLeaving(false); }, 150);
   }
 
-  useReveal(grid, [city, q.data]);
-  const [lead, ...rest] = list;
+  // Lead with the soonest night that has a photo: the house-shaped tile needs a picture to carry it.
+  const leadIdx = Math.max(0, near.findIndex((x) => x.e.image_url));
+  const [lead, ...rest] = near.length ? [near[leadIdx], ...near.filter((_, k) => k !== leadIdx)] : [];
   const firstRow = rest.slice(0, showMember ? 3 : 4);
   const after = rest.slice(firstRow.length);
   const sizes = bentoSizes(after.length);
@@ -147,38 +198,68 @@ export default function Discover() {
 
   return (
     <div className="ambient space-y-8">
-      <section className="space-y-3">
+      <section className="space-y-5">
         <h1 className="text-4xl font-bold leading-[1.08] tracking-[-0.01em] sm:text-6xl">Good nights out, <span className="brand-underline">on your Doorstep.</span></h1>
-        <p className="max-w-xl text-lg text-muted">Gigs, comedy, theatre and more at venues near you, at member prices.</p>
+        {area ? (
+          <p className="text-lg text-muted">Gigs, comedy, theatre and more close to <button onClick={() => setArea(null)} className="press font-semibold text-ink underline decoration-coral decoration-2 underline-offset-4" aria-label={`Change area, currently ${area.label}`}>{area.label}</button>.</p>
+        ) : <AreaPrompt onSet={setArea} />}
       </section>
-      {cities.length > 1 && <CityFilter options={['all', ...cities]} value={city} onChange={pick} />}
+
       {q.isPending && (
-        <div className="space-y-4" role="status" aria-label="Finding events">
+        <div className="space-y-4" role="status" aria-label="Finding nights out near you">
           <div className="bento-wrap"><div className="bento">
             <TileSkeleton size="big" />{Array.from({ length: 4 }, (_, k) => <TileSkeleton key={k} />)}
             <TileSkeleton size="wide" /><TileSkeleton /><TileSkeleton />
           </div></div>
-          {slow && <Loader mode="inline" label="Finding events" />}
+          {slow && <Loader mode="inline" label="Finding nights out near you" />}
         </div>
       )}
       {q.isError && (
         <div className="card flex flex-col items-start gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-medium">We couldn’t load events just now.</p>
+          <p className="font-medium">We couldn’t load what’s on just now.</p>
           <button className="btn-secondary !py-2" onClick={() => q.refetch()}>Try again</button>
         </div>
       )}
-      {q.isSuccess && list.length === 0 && <Empty title="Nothing on sale yet">New events are added every week. Check back soon.</Empty>}
-      {lead && (
-        <div className="bento-wrap" ref={grid}><div key={city} className={`bento ${leaving ? 'grid-leaving' : ''}`}>
-          <EventTile e={lead} size="big" className="reveal" style={delay()} />
-          {firstRow.map((e) => <EventTile key={e.id} e={e} className="reveal" style={delay()} />)}
-          {showMember && <MemberTile style={delay()} />}
-          {after.map((e, k) => <EventTile key={e.id} e={e} size={sizes[k]} className="reveal" style={delay()} />)}
-        </div></div>
+
+      {q.isSuccess && (
+        <section className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold sm:text-3xl">{HEADING[when]}</h2>
+              <p className="text-sm tabular-nums text-muted">{near.length} night{near.length === 1 ? '' : 's'} out{area ? ` within ${NEAR_KM} km of ${area.outcode}` : ''}</p>
+            </div>
+            <Segmented label="When" options={WHEN} value={when} onChange={pick} />
+          </div>
+          {near.length === 0 || !lead ? (
+            <Empty title={when === 'tonight' ? 'Nothing on tonight, yet' : 'It’s quiet on your doorstep'}>
+              {far.length > 0 ? 'There’s more a little further afield, below.' : 'New nights out land every week. Try another night.'}
+            </Empty>
+          ) : (
+            <div className="bento-wrap" ref={grid}><div key={when + (area?.outcode ?? '')} className={`bento ${leaving ? 'grid-leaving' : ''}`}>
+              <EventTile e={lead.e} away={lead.away?.label} size="big" className="reveal" style={delay()} />
+              {firstRow.map((x) => <EventTile key={x.e.id} e={x.e} away={x.away?.label} className="reveal" style={delay()} />)}
+              {showMember && <MemberTile style={delay()} />}
+              {after.map((x, k) => <EventTile key={x.e.id} e={x.e} away={x.away?.label} size={sizes[k]} className="reveal" style={delay()} />)}
+            </div></div>
+          )}
+        </section>
       )}
+
+      {far.length > 0 && (
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold">Worth the trip</h2>
+            <p className="text-sm text-muted">Further than {NEAR_KM} km from {area?.outcode}.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+            {far.map((x) => <EventTile key={x.e.id} e={x.e} away={x.away?.label} className="aspect-[4/5] sm:aspect-square" />)}
+          </div>
+        </section>
+      )}
+
       {session && !member.data && member.isSuccess && (
         <div className="card flex flex-col items-start gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-medium">You’re not a member yet. Join to book any event.</p>
+          <p className="font-medium">You’re not a member yet. Join to book any night out.</p>
           <PrimaryLink to="/join">Become a member</PrimaryLink>
         </div>
       )}

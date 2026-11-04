@@ -1,7 +1,7 @@
 -- Staging/test fixtures only. Never run against production.
 -- Tramshed, Cardiff is the first close-off venue (approved by Nathan, 4 Nov 2026) with the internal test recipient.
-insert into public.venues (id, slug, name, address_line, city, postcode, timezone, capacity)
-values ('a0000000-0000-4000-8000-000000000001', 'tramshed-cardiff', 'Tramshed', 'Clive St, Grangetown', 'Cardiff', 'CF11 7EN', 'Europe/London', 1000)
+insert into public.venues (id, slug, name, address_line, city, postcode, timezone, capacity, lat, lng)
+values ('a0000000-0000-4000-8000-000000000001', 'tramshed-cardiff', 'Tramshed', 'Clive St, Grangetown', 'Cardiff', 'CF11 7EN', 'Europe/London', 1000, 51.4706, -3.1937)
 on conflict (id) do nothing;
 
 insert into public.venue_closeoff_settings (venue_id, recipients, sending_enabled, notes)
