@@ -133,9 +133,12 @@
   .surface-3d {
     box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), inset 0 -10px 24px -12px rgba(26, 16, 48, 0.18), 0 14px 28px -14px rgba(26, 16, 48, 0.28);
   }
+  /* Neutral filled surface (Nathan, 4 Nov 2026: no orange fill blocks). White, lit top edge, soft drop shadow.
+     Placeholder until the design thread settles the replacement; keep the class name so every use updates together. */
   .tile-wash {
-    background: radial-gradient(120% 90% at 20% 10%, #FFF0EB 0%, #FFE1D6 45%, #FFD2BF 100%);
-    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.85), inset 0 -14px 28px -14px rgba(190, 53, 64, 0.18), 0 14px 28px -16px rgba(190, 53, 64, 0.25);
+    background: linear-gradient(180deg, #FFFFFF 0%, #F6F2EF 100%);
+    border: 1px solid rgba(230, 223, 220, 0.7);
+    box-shadow: inset 0 2px 0 #fff, inset 0 -12px 24px -14px rgba(26, 16, 48, 0.10), 0 14px 28px -18px rgba(26, 16, 48, 0.25);
   }
   .surface-ink {
     background: radial-gradient(120% 100% at 25% 0%, #2B1F45 0%, #1A1030 60%);

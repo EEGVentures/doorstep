@@ -43,7 +43,7 @@ export function PrimaryLink({ to, children }: { to: string; children: ReactNode 
 }
 
 export function Notice({ tone = 'info', children }: { tone?: 'info' | 'error' | 'success'; children: ReactNode }) {
-  const cls = tone === 'error' ? 'border-action/40 bg-wash text-ink' : tone === 'success' ? 'border-ink/20 bg-white' : 'border-line bg-white';
+  const cls = tone === 'error' ? 'border-action/50 bg-white text-ink' : tone === 'success' ? 'border-ink/20 bg-white' : 'border-line bg-white';
   return <div role={tone === 'error' ? 'alert' : 'status'} className={`rounded-xl border px-4 py-3 text-sm ${cls}`}>{children}</div>;
 }
 
