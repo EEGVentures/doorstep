@@ -133,12 +133,17 @@
   .surface-3d {
     box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), inset 0 -10px 24px -12px rgba(26, 16, 48, 0.18), 0 14px 28px -14px rgba(26, 16, 48, 0.28);
   }
-  /* Neutral filled surface (Nathan, 4 Nov 2026: no orange fill blocks). White, lit top edge, soft drop shadow.
-     Placeholder until the design thread settles the replacement; keep the class name so every use updates together. */
+  /* Neutral filled surface (Nathan, 4 Nov 2026: no orange fill blocks; brand guidelines edition 3). */
   .tile-wash {
-    background: linear-gradient(180deg, #FFFFFF 0%, #F6F2EF 100%);
-    border: 1px solid rgba(230, 223, 220, 0.7);
-    box-shadow: inset 0 2px 0 #fff, inset 0 -12px 24px -14px rgba(26, 16, 48, 0.10), 0 14px 28px -18px rgba(26, 16, 48, 0.25);
+    background: linear-gradient(160deg, #FFFFFF, #F7F4F2);
+    box-shadow: inset 0 2px 0 #FFFFFF, inset 0 -10px 20px rgba(26, 16, 48, 0.04), 0 16px 30px -14px rgba(26, 16, 48, 0.22);
+  }
+  /* Standout tile, at most one per screen: gradient as a frame line only, ink text. */
+  .tile-framed {
+    border: 2px solid transparent;
+    background: linear-gradient(160deg, #FFFFFF, #FCFAF8) padding-box, linear-gradient(135deg, #FF5A5F, #FF8A3D) border-box;
+    box-shadow: 0 16px 30px -14px rgba(190, 53, 64, 0.28), 0 2px 6px rgba(26, 16, 48, 0.05);
+    color: #1A1030;
   }
   .surface-ink {
     background: radial-gradient(120% 100% at 25% 0%, #2B1F45 0%, #1A1030 60%);
