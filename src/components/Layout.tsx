@@ -15,19 +15,24 @@ export default function Layout() {
     on(); window.addEventListener('scroll', on, { passive: true });
     return () => window.removeEventListener('scroll', on);
   }, []);
-  const nav = 'press rounded-full px-4 py-2 text-sm font-medium text-muted hover:text-ink aria-[current=page]:bg-ink aria-[current=page]:text-white aria-[current=page]:shadow-[inset_0_1px_0_rgba(255,255,255,0.18),inset_0_-4px_8px_-4px_rgba(0,0,0,0.4),0_6px_14px_-6px_rgba(26,16,48,0.5)]';
+  const nav = 'press relative isolate rounded-full px-4 py-2 text-sm font-medium text-muted transition-colors duration-200 hover:text-ink aria-[current=page]:text-white';
+  // The active pill is its own element with a shared transition name, so it slides between links on navigation.
+  const item = (label: string) => ({ isActive }: { isActive: boolean }) => (<>
+    {isActive && <span aria-hidden="true" className="nav-pill absolute inset-0 -z-10 rounded-full bg-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_6px_14px_-6px_rgba(26,16,48,0.5)]" />}
+    {label}
+  </>);
   return (
     <div className="min-h-screen flex flex-col">
       {!supabaseConfigured && (
         <div className="bg-ink px-4 py-2 text-center text-xs text-white">Preview build: Supabase keys are not set, so no live data.</div>
       )}
-      <header className="sticky top-0 z-20 px-3 pt-3">
+      <header className="site-header sticky top-0 z-20 px-3 pt-3">
         <div className={`mx-auto flex max-w-6xl items-center justify-between gap-4 rounded-full border py-2 pl-5 pr-2 transition-[background-color,box-shadow,border-color] duration-200 ${scrolled ? 'glass' : 'border-transparent'}`}>
-          <Link to="/" aria-label="Doorstep home"><img src="/brand/doorstep-lockup-c-light.png" alt="doorstep" className="h-7 w-auto" /></Link>
+          <Link to="/" viewTransition aria-label="Doorstep home" className="press"><img src="/brand/doorstep-lockup-c-light.png" alt="doorstep" className="h-7 w-auto" /></Link>
           <nav className="flex items-center gap-1">
-            {!partnerRoute && <NavLink to="/" end className={nav}>Discover</NavLink>}
-            {session && <NavLink to="/wallet" className={nav}>Tickets</NavLink>}
-            {session ? <NavLink to="/account" className={nav}>Account</NavLink> : <NavLink to={`/signin?next=${encodeURIComponent(pathname)}`} className={nav}>Sign in</NavLink>}
+            {!partnerRoute && <NavLink to="/" end viewTransition className={nav}>{item('Discover')}</NavLink>}
+            {session && <NavLink to="/wallet" viewTransition className={nav}>{item('Tickets')}</NavLink>}
+            {session ? <NavLink to="/account" viewTransition className={nav}>{item('Account')}</NavLink> : <NavLink to={`/signin?next=${encodeURIComponent(pathname)}`} viewTransition className={nav}>{item('Sign in')}</NavLink>}
           </nav>
         </div>
       </header>

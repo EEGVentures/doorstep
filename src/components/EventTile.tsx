@@ -1,9 +1,44 @@
 import { Link } from 'react-router-dom';
-import type { CSSProperties } from 'react';
+import { useRef, type CSSProperties, type PointerEvent } from 'react';
 import { eventDate, eventTime, pounds } from '@/lib/format';
 import type { Listing } from '@/pages/Discover';
 
 export type TileSize = 'sm' | 'wide' | 'big';
+
+const canDrift = () => typeof window !== 'undefined'
+  && matchMedia('(hover: hover) and (pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * Lead tile only: the photo drifts a few pixels against the pointer, smoothed by a critically damped spring
+ * so it has weight instead of snapping to the mouse. Writes transform straight to the image (no React renders).
+ */
+function useDrift() {
+  const img = useRef<HTMLImageElement>(null);
+  const st = useRef({ x: 0, y: 0, s: 1, vx: 0, vy: 0, vs: 0, tx: 0, ty: 0, ts: 1, raf: 0, last: 0 });
+  const step = (now: number) => {
+    const a = st.current, dt = Math.min(32, now - (a.last || now)) / 1000; a.last = now;
+    const k = 120, c = 2 * Math.sqrt(k); // stiffness, critical damping
+    for (const [p, v, t] of [['x', 'vx', 'tx'], ['y', 'vy', 'ty'], ['s', 'vs', 'ts']] as const) {
+      const acc = k * (a[t] - a[p]) - c * a[v];
+      a[v] += acc * dt; a[p] += a[v] * dt;
+    }
+    if (img.current) img.current.style.transform = `translate3d(${a.x.toFixed(2)}px, ${a.y.toFixed(2)}px, 0) scale(${a.s.toFixed(4)})`;
+    const moving = Math.abs(a.tx - a.x) + Math.abs(a.ty - a.y) + Math.abs(a.ts - a.s) * 100 + Math.abs(a.vx) + Math.abs(a.vy) > 0.02;
+    a.raf = moving ? requestAnimationFrame(step) : 0;
+    if (!moving) a.last = 0;
+  };
+  const kick = () => { if (!st.current.raf) st.current.raf = requestAnimationFrame(step); };
+  return {
+    img,
+    onPointerMove: (e: PointerEvent<HTMLElement>) => {
+      if (e.pointerType !== 'mouse' || !canDrift()) return;
+      const r = e.currentTarget.getBoundingClientRect();
+      const nx = (e.clientX - r.left) / r.width - 0.5, ny = (e.clientY - r.top) / r.height - 0.5;
+      Object.assign(st.current, { tx: nx * -14, ty: ny * -14, ts: 1.05 }); kick();
+    },
+    onPointerLeave: () => { Object.assign(st.current, { tx: 0, ty: 0, ts: 1 }); kick(); },
+  };
+}
 
 /** Shared-element name: the tile photo and the event hero carry the same one, so the photo grows into the hero. */
 export const photoName = (slug: string) => `photo-${slug.replace(/[^a-z0-9-]/gi, '')}`;
@@ -18,13 +53,15 @@ export function EventTile({ e, size = 'sm', style, className = '' }: { e: Listin
   const big = size === 'big';
   const photo = Boolean(e.image_url);
   const sizeCls = big ? 'tile-big' : size === 'wide' ? 'tile-wide' : '';
+  const drift = useDrift();
   const when = `${eventDate(e.starts_at, e.timezone)} · ${eventTime(e.starts_at, e.timezone)}`;
   return (
     <Link to={`/events/${e.slug}`} viewTransition style={style}
+      onPointerMove={big ? drift.onPointerMove : undefined} onPointerLeave={big ? drift.onPointerLeave : undefined}
       className={`tile ${sizeCls} ${photo ? '' : 'tile-wash'} ${soldOut ? 'tile-soldout' : ''} ${className}`}
       aria-label={`${e.title}, ${e.venue_name}, ${when}${soldOut ? ', sold out' : ''}`}>
       {photo && <>
-        <img className="tile-bg" src={e.image_url!} alt="" loading={big ? 'eager' : 'lazy'} style={{ viewTransitionName: photoName(e.slug) }} />
+        <img ref={big ? drift.img : undefined} className={`tile-bg ${big ? 'tile-drift' : ''}`} src={e.image_url!} alt="" loading={big ? 'eager' : 'lazy'} style={{ viewTransitionName: photoName(e.slug) }} />
         <span className="tile-fade" />
       </>}
       <span className={`absolute left-3 top-3 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium tabular-nums ${photo ? 'glass-dark' : 'glass text-ink'}`}>{when}</span>

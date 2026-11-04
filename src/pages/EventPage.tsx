@@ -46,9 +46,9 @@ export function EventHeader({ ev }: { ev: any }) {
 }
 
 /** Sticky glass bar on phones: price on the left, opens the booking sheet. */
-export function BuyBar({ from, label, onOpen, disabled }: { from: number | null; label: string; onOpen: () => void; disabled?: boolean }) {
+export function BuyBar({ from, label, onOpen, disabled, tucked }: { from: number | null; label: string; onOpen: () => void; disabled?: boolean; tucked?: boolean }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden">
+    <div className="buybar fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden" data-tucked={tucked || undefined} aria-hidden={tucked || undefined}>
       <div className="glass mx-auto flex max-w-xl items-center justify-between gap-3 rounded-full py-2 pl-5 pr-2">
         <div className="leading-tight">
           {from != null ? <><p className="text-xs text-muted">From</p><p className="font-semibold tabular-nums">{pounds2(from)}</p></> : <p className="text-sm font-medium">Tickets</p>}
@@ -114,7 +114,7 @@ export default function EventPage() {
     <div className="ambient grid gap-8 pb-24 lg:grid-cols-[1fr_380px] lg:pb-0">
       <EventHeader ev={ev} />
       <aside className="card hidden h-fit p-6 lg:sticky lg:top-24 lg:block"><BookingPanel ev={ev} here={here} /></aside>
-      <BuyBar from={soldOut ? null : from} label={soldOut ? 'Sold out' : 'Get tickets'} onOpen={() => setSheet(true)} disabled={soldOut && ev.status !== 'on_sale'} />
+      <BuyBar from={soldOut ? null : from} label={soldOut ? 'Sold out' : 'Get tickets'} onOpen={() => setSheet(true)} disabled={soldOut && ev.status !== 'on_sale'} tucked={sheet} />
       <BottomSheet open={sheet} onClose={close} label="Book tickets">
         <h2 className="mb-1 text-lg font-semibold">{ev.title}</h2>
         <p className="mb-4 text-sm tabular-nums text-muted">{eventDateLong(ev.starts_at, ev.venue.timezone)}</p>

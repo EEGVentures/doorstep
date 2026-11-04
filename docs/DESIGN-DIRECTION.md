@@ -25,3 +25,12 @@ Nathan approved the critique fixes on 4 Nov 2026. Before and after screenshots a
 - **Tile to event**: the photo grows into the hero through the View Transitions API (`Link viewTransition` plus a shared `view-transition-name`, 350ms on the drawer curve). The hero caption fades in on top of it.
 - **Phones**: the event page has a sticky glass buy bar that opens a bottom sheet (`BottomSheet.tsx`). The sheet closes on Escape, a backdrop tap, a drag past a quarter of its height, or a flick faster than 0.11px/ms.
 - **Reduced motion** keeps the fades and removes movement, scale and the shared-element morph.
+
+## Motion polish, second pass (Emil Kowalski), 4 Nov 2026
+
+- **City filter**: a white-on-ink copy of the chips sits on top, clipped to the selected city with `clip-path: inset(... round 999px)`. The clip moves over 260ms ease-in-out, so the text turns white exactly where the pill is.
+- **Scroll reveal**: tiles rise 14px from `scale(0.98)` and the photo un-clips from the top as each tile enters the viewport, once (`useReveal`, IntersectionObserver). This uses transitions, not keyframes, so a fast scroll retargets smoothly. Tiles already on screen keep the 40ms stagger, and hover and press take over once the entrance has played.
+- **Lead tile drift** (mouse only, not under reduced motion): the photo drifts up to 7px against the pointer and zooms to 1.05. It's smoothed by a critically damped spring written straight to the image transform, with no React renders.
+- **Bottom sheet**: drag writes the transform and backdrop opacity straight to the DOM. Pulling upwards meets growing friction (a log curve, never a hard stop). The sheet takes one pointer at a time and uses pointer capture. It dismisses past a quarter of its height, or on a flick faster than 0.11px/ms measured over the last 100ms, so a slow drag that stops springs back. Text selection is blocked while dragging. It opens in 460ms on the drawer curve and closes faster, in 240ms ease-out.
+- **Buy bar**: rises in with `@starting-style` and tucks away while the sheet is open.
+- **Micro details**: the quantity digit rolls in the direction of the change. The primary button label swaps through a 3px blur. The header's active pill is one element with a shared `view-transition-name`, so it slides between links on navigation, and the header itself stays still while the page crossfades.

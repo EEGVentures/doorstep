@@ -40,34 +40,65 @@ export function bentoSizes(n: number, maxWide = 3): TileSize[] {
   return out.slice(0, n);
 }
 
-/** Glass segmented filter; an ink pill slides to the selected city. */
+/**
+ * Glass segmented filter. A white-on-ink copy of the list sits on top, clipped to the selected city, and the clip
+ * moves between cities. The text changes colour exactly where the pill is, which colour transitions on each chip can't do.
+ */
 function CityFilter({ options, value, onChange }: { options: string[]; value: string; onChange: (c: string) => void }) {
   const wrap = useRef<HTMLDivElement>(null);
-  const [pill, setPill] = useState<{ x: number; w: number } | null>(null);
+  const [clip, setClip] = useState<string | null>(null);
   useLayoutEffect(() => {
     const measure = () => {
-      const el = wrap.current?.querySelector<HTMLButtonElement>(`[data-city="${CSS.escape(value)}"]`);
-      if (el) setPill({ x: el.offsetLeft, w: el.offsetWidth });
+      const box = wrap.current;
+      const el = box?.querySelector<HTMLButtonElement>(`[data-city="${CSS.escape(value)}"]`);
+      if (!box || !el) return;
+      const right = box.clientWidth - el.offsetLeft - el.offsetWidth;
+      const bottom = box.clientHeight - el.offsetTop - el.offsetHeight;
+      setClip(`inset(${el.offsetTop}px ${right}px ${bottom}px ${el.offsetLeft}px round 999px)`);
     };
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
   }, [value, options.join('|')]);
+  const label = (c: string) => (c === 'all' ? 'Everywhere' : c);
   return (
     <div ref={wrap} className="glass relative inline-flex max-w-full flex-wrap gap-1 rounded-full p-1" role="group" aria-label="Filter by city">
-      {pill && <span aria-hidden="true" className="absolute top-1 bottom-1 left-0 rounded-full bg-ink"
-        style={{ width: pill.w, transform: `translateX(${pill.x}px)`, transition: 'transform 200ms var(--ease-in-out), width 200ms var(--ease-in-out)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), 0 6px 14px -6px rgba(26,16,48,0.5)' }} />}
       {options.map((c) => (
-        <button key={c} data-city={c} onClick={() => onChange(c)} aria-pressed={value === c} className="chip">{c === 'all' ? 'Everywhere' : c}</button>
+        <button key={c} data-city={c} onClick={() => onChange(c)} aria-pressed={value === c} className="chip">{label(c)}</button>
       ))}
+      {clip && (
+        <div aria-hidden="true" className="seg-active pointer-events-none absolute inset-0 z-[2] flex flex-wrap gap-1 rounded-full p-1" style={{ clipPath: clip }}>
+          {options.map((c) => <span key={c} className="chip !text-white">{label(c)}</span>)}
+        </div>
+      )}
     </div>
   );
 }
 
+/** Reveal tiles as they scroll into view, once. Tiles already on screen at load keep their stagger. */
+function useReveal(root: React.RefObject<HTMLElement | null>, deps: unknown[]) {
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const items = [...el.querySelectorAll<HTMLElement>('.reveal:not([data-in])')];
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        const t = e.target as HTMLElement;
+        t.dataset.in = '';
+        io.unobserve(t);
+        // Hand transforms back to hover and press once the entrance has played.
+        setTimeout(() => { t.dataset.done = ''; }, 900);
+      }
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+    items.forEach((i) => io.observe(i));
+    return () => io.disconnect();
+  }, deps);
+}
+
 function MemberTile({ style }: { style?: CSSProperties }) {
   return (
-    <div className="tile surface-ink tile-in flex flex-col justify-between p-5 text-white" style={style}>
+    <div className="tile surface-ink reveal flex flex-col justify-between p-5 text-white" style={style}>
       <img src="/brand/doorstep-emblem-v4-white.png" alt="" className="h-8 w-8" />
       <div className="space-y-2">
         <p className="font-display text-lg font-semibold leading-snug text-white" style={{ textWrap: 'balance' } as CSSProperties}>Members book every night out</p>
@@ -81,6 +112,7 @@ export default function Discover() {
   const [city, setCity] = useState('all');
   const [leaving, setLeaving] = useState(false);
   const stagger = useRef(true);
+  const grid = useRef<HTMLDivElement>(null);
   const { session } = useAuth();
   const member = useMembership();
   const q = useQuery({
@@ -105,6 +137,7 @@ export default function Discover() {
     setTimeout(() => { setCity(c); setLeaving(false); }, 150);
   }
 
+  useReveal(grid, [city, q.data]);
   const [lead, ...rest] = list;
   const firstRow = rest.slice(0, showMember ? 3 : 4);
   const after = rest.slice(firstRow.length);
@@ -136,11 +169,11 @@ export default function Discover() {
       )}
       {q.isSuccess && list.length === 0 && <Empty title="Nothing on sale yet">New events are added every week. Check back soon.</Empty>}
       {lead && (
-        <div className="bento-wrap"><div key={city} className={`bento ${leaving ? 'grid-leaving' : ''}`}>
-          <EventTile e={lead} size="big" className="tile-in" style={delay()} />
-          {firstRow.map((e) => <EventTile key={e.id} e={e} className="tile-in" style={delay()} />)}
+        <div className="bento-wrap" ref={grid}><div key={city} className={`bento ${leaving ? 'grid-leaving' : ''}`}>
+          <EventTile e={lead} size="big" className="reveal" style={delay()} />
+          {firstRow.map((e) => <EventTile key={e.id} e={e} className="reveal" style={delay()} />)}
           {showMember && <MemberTile style={delay()} />}
-          {after.map((e, k) => <EventTile key={e.id} e={e} size={sizes[k]} className="tile-in" style={delay()} />)}
+          {after.map((e, k) => <EventTile key={e.id} e={e} size={sizes[k]} className="reveal" style={delay()} />)}
         </div></div>
       )}
       {session && !member.data && member.isSuccess && (

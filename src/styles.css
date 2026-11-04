@@ -53,7 +53,7 @@
     transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out), transform var(--press) var(--ease-out); }
   @media (hover: hover) and (pointer: fine) { .btn-secondary:hover { @apply bg-ink text-white; } }
   .chip { @apply relative z-[1] rounded-full px-4 py-2 text-sm font-medium text-ink; transition: color 200ms var(--ease-in-out), transform var(--press) var(--ease-out); }
-  .chip[aria-pressed='true'] { @apply text-white; }
+
   .press { transition: transform var(--press) var(--ease-out); }
   .link { @apply text-ink underline underline-offset-4 decoration-2 decoration-coral hover:decoration-ink; }
 
@@ -115,13 +115,21 @@
   a.tile:active { transform: scale(0.97); transition-duration: var(--press); }
   @media (hover: hover) and (pointer: fine) {
     a.tile:hover { transform: translateY(-3px); box-shadow: 0 1px 2px rgba(26, 16, 48, 0.06), 0 22px 40px -20px rgba(26, 16, 48, 0.45); }
-    a.tile:hover > img.tile-bg { transform: scale(1.03); }
+    a.tile:hover > img.tile-bg:not(.tile-drift) { transform: scale(1.03); }
   }
+  img.tile-drift { transition: filter 200ms var(--ease-out), clip-path 620ms var(--ease-out); will-change: transform; }
   .tile-soldout > img.tile-bg { filter: grayscale(0.85) brightness(0.8); }
 
-  /* Tiles enter from a hair smaller and transparent; never from scale(0). */
-  .tile-in { animation: tile-in 200ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 40ms); }
-  @keyframes tile-in { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: none; } }
+  /* Tiles reveal as they scroll into view, once: up a little from a hair smaller, never from scale(0).
+     Transitions (not keyframes) so a fast scroll retargets smoothly. After the entrance, hover and press take over. */
+  .reveal:not([data-done]) { opacity: 0; transform: translateY(14px) scale(0.98);
+    transition: opacity 360ms var(--ease-out), transform 520ms var(--ease-out); transition-delay: calc(var(--i, 0) * 40ms); }
+  .reveal[data-in]:not([data-done]) { opacity: 1; transform: none; }
+  .reveal:not([data-done]) > img.tile-bg { clip-path: inset(8% 0 0 0 round 20px); transition: clip-path 620ms var(--ease-out); transition-delay: inherit; }
+  .reveal[data-in]:not([data-done]) > img.tile-bg { clip-path: inset(0 0 0 0 round 0); }
+  .seg-active { isolation: isolate; transition: clip-path 260ms var(--ease-in-out); }
+  .seg-active::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: 999px; background: #1A1030;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18); }
   .grid-leaving { opacity: 0; transition: opacity 150ms ease-in; }
 
   /* Skeleton with a slow shimmer while listings load. */
@@ -151,10 +159,30 @@
   }
 
   /* Bottom sheet (phones): slides on the drawer curve, dismisses on a downward flick. */
-  .sheet-backdrop { @apply fixed inset-0 z-40 bg-ink/40; transition: opacity 300ms var(--ease-out); }
+  .sheet-backdrop { @apply fixed inset-0 z-40 bg-ink/40; opacity: 0; transition: opacity 200ms var(--ease-out); }
+  .sheet-backdrop[data-shown] { opacity: 1; transition-duration: 400ms; }
   .sheet { @apply fixed inset-x-0 bottom-0 z-50 max-h-[88vh] overflow-y-auto rounded-t-[28px] bg-white px-5 pb-8 pt-3;
     box-shadow: inset 0 1px 0 #fff, 0 -12px 40px -12px rgba(26, 16, 48, 0.35);
-    transition: transform 400ms var(--ease-drawer); touch-action: pan-x; }
+    transform: translateY(100%); transition: transform 240ms var(--ease-out); }
+  .sheet[data-shown] { transform: translateY(0); transition: transform 460ms var(--ease-drawer); }
+
+  /* Phone buy bar: rises in after the page settles, tucks away while the sheet is open. */
+  .buybar { transition: transform 420ms var(--ease-drawer), opacity 200ms var(--ease-out); transition-delay: 120ms; }
+  @starting-style { .buybar { transform: translateY(120%); opacity: 0; } }
+  .buybar[data-tucked] { transform: translateY(120%); opacity: 0; transition-delay: 0ms; transition-duration: 220ms; }
+
+  /* Quantity digit rolls in the direction of the change. */
+  .roll { display: inline-block; animation: roll-up 180ms var(--ease-out); }
+  .roll[data-dir='down'] { animation-name: roll-down; }
+  @keyframes roll-up { from { transform: translateY(70%); opacity: 0; filter: blur(2px); } }
+  @keyframes roll-down { from { transform: translateY(-70%); opacity: 0; filter: blur(2px); } }
+  /* Button label swaps through a light blur so the two states read as one change, not two objects. */
+  .swap { display: inline-block; animation: swap-in 220ms var(--ease-out); }
+  @keyframes swap-in { from { opacity: 0; filter: blur(3px); transform: scale(0.98); } }
+
+  /* Header nav pill: one element that morphs between links when the page changes. */
+  .nav-pill { view-transition-name: nav-pill; }
+  .site-header { view-transition-name: site-header; }
 
   .ambient { position: relative; isolation: isolate; }
   .ambient::before {
@@ -172,14 +200,20 @@
 .hero-caption { view-transition-name: hero-caption; background: linear-gradient(to top, rgba(14, 8, 28, 0.88) 0%, rgba(14, 8, 28, 0.5) 55%, rgba(14, 8, 28, 0) 100%); }
 ::view-transition-new(hero-caption) { animation-delay: 120ms; animation-fill-mode: both; }
 ::view-transition-group(*) { animation-duration: 350ms; animation-timing-function: var(--ease-drawer); }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: 200ms; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 220ms; animation-timing-function: var(--ease-out); }
+::view-transition-group(nav-pill) { animation-duration: 280ms; animation-timing-function: var(--ease-in-out); }
+::view-transition-group(site-header), ::view-transition-old(site-header), ::view-transition-new(site-header) { animation: none; }
 
 /* Reduced motion: keep the fades, drop movement and scale. */
 @media (prefers-reduced-motion: reduce) {
+  .roll, .swap { animation-name: fade-in !important; }
+  @keyframes fade-in { from { opacity: 0; } }
+  .buybar { transform: none !important; }
   .tile, .tile > img.tile-bg, .btn-primary, .btn-primary .arrow, .chip, .press, .sheet { transition-property: opacity, color, background-color, background-position, filter !important; }
   a.tile:hover, a.tile:active, .btn-primary:active, .chip:active { transform: none !important; }
   a.tile:hover > img.tile-bg { transform: none !important; }
-  @keyframes tile-in { from { opacity: 0; } to { opacity: 1; } }
+  .reveal:not([data-done]) { transform: none !important; } .reveal > img.tile-bg { clip-path: none !important; }
+  .seg-active { transition: none; }
   .skeleton { animation: none; }
   ::view-transition-group(*) { animation: none; }
 }
