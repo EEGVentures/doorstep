@@ -14,7 +14,7 @@ export type Listing = {
 /** A non-event bento tile: soft 3D surface for membership and how-it-works messages. */
 function InfoTile({ children, tone = 'light' }: { children: React.ReactNode; tone?: 'light' | 'ink' }) {
   return (
-    <div className={`tile card flex flex-col justify-between p-5 ${tone === 'ink' ? '!border-transparent bg-ink text-white' : 'tile-wash'}`}>
+    <div className={`tile card flex flex-col justify-between p-5 ${tone === 'ink' ? '!border-transparent surface-ink text-white' : 'tile-wash'}`}>
       {children}
     </div>
   );

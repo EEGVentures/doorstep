@@ -10,7 +10,7 @@ export function EventTile({ e, size = 'sq' }: { e: Listing; size?: 'sq' | 'big' 
     <Link to={`/events/${e.slug}`} className={`tile card ${big ? 'tile-big' : size === 'wide' ? 'tile-wide' : ''} ${e.image_url ? '' : 'tile-wash'}`}>
       {e.image_url
         ? <img className="tile-bg" src={e.image_url} alt="" loading="lazy" />
-        : <img className="emblem-3d absolute left-1/2 top-[30%] w-1/3 max-w-[120px] -translate-x-1/2 -translate-y-1/2" src="/brand/doorstep-emblem-v4-gradient.png" alt="" />}
+        : <img className="absolute left-1/2 top-[30%] w-1/3 max-w-[120px] -translate-x-1/2 -translate-y-1/2" src="/brand/doorstep-emblem-v4-gradient.png" alt="" />}
       <span className="glass absolute left-1/2 top-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink sm:left-3 sm:translate-x-0">
         {eventDate(e.starts_at, e.timezone)} · {eventTime(e.starts_at, e.timezone)}
       </span>

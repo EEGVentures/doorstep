@@ -36,7 +36,7 @@
   .btn-primary { box-shadow: 0 6px 16px -6px rgba(255, 90, 95, 0.45), 0 2px 4px rgba(26, 16, 48, 0.08); }
   .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-ink px-6 py-3 font-semibold text-ink hover:bg-ink hover:text-white disabled:opacity-50; }
   .chip { @apply rounded-full px-4 py-2 text-sm font-medium text-ink; }
-  .chip[aria-pressed='true'] { @apply bg-ink text-white; box-shadow: 0 6px 14px -6px rgba(26, 16, 48, 0.5); }
+  .chip[aria-pressed='true'] { @apply bg-ink text-white; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -4px 8px -4px rgba(0, 0, 0, 0.4), 0 6px 14px -6px rgba(26, 16, 48, 0.5); }
   .link { @apply text-ink underline underline-offset-4 decoration-2 decoration-coral hover:decoration-ink; }
   /* Design direction (Nathan, 4 Nov 2026): Liquid Glass, bento squares, soft 3D. Brand palette only, light-first. */
 
@@ -89,9 +89,30 @@
   a.tile:hover > img.tile-bg { transform: scale(1.05); }
   @media (prefers-reduced-motion: reduce) { .tile, .tile > img.tile-bg { transition: none; } a.tile:hover { transform: none; } a.tile:hover > img.tile-bg { transform: none; } }
 
-  /* Soft 3D placeholder when an event has no image: warm brand wash with a raised emblem. */
-  .tile-wash { background: radial-gradient(120% 90% at 20% 10%, #FFF0EB 0%, #FFE1D6 45%, #FFD2BF 100%); }
-  .emblem-3d { filter: drop-shadow(0 12px 16px rgba(190, 53, 64, 0.25)) drop-shadow(0 2px 3px rgba(26, 16, 48, 0.15)); }
+  /* Soft 3D lives on filled sections (tiles, panels, pills), never on icons or the emblem (Nathan, 4 Nov 2026).
+     A filled surface gets a lit top edge, a gently shaded bottom edge and a soft drop shadow, so it looks moulded. */
+  .surface-3d {
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -10px 24px -12px rgba(26, 16, 48, 0.18),
+      0 14px 28px -14px rgba(26, 16, 48, 0.28),
+      0 2px 4px rgba(26, 16, 48, 0.06);
+  }
+  .tile-wash {
+    background: radial-gradient(120% 90% at 20% 10%, #FFF0EB 0%, #FFE1D6 45%, #FFD2BF 100%);
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.85),
+      inset 0 -14px 28px -14px rgba(190, 53, 64, 0.18),
+      0 14px 28px -14px rgba(190, 53, 64, 0.22),
+      0 2px 4px rgba(26, 16, 48, 0.05);
+  }
+  .surface-ink {
+    background: radial-gradient(120% 100% at 25% 0%, #2B1F45 0%, #1A1030 60%);
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.14),
+      inset 0 -14px 28px -14px rgba(0, 0, 0, 0.45),
+      0 16px 30px -14px rgba(26, 16, 48, 0.45);
+  }
 
   /* Page ambience: very soft warm light behind glass, kept faint so it never reads as a pink wash. */
   .ambient { position: relative; isolation: isolate; }

@@ -7,7 +7,7 @@ export default function Layout() {
   const { pathname } = useLocation();
   // Partner links keep a stripped-back header: no membership prompts on that route.
   const partnerRoute = pathname.startsWith('/go/');
-  const nav = 'rounded-full px-4 py-2 text-sm font-medium text-muted hover:text-ink aria-[current=page]:bg-ink aria-[current=page]:text-white';
+  const nav = 'rounded-full px-4 py-2 text-sm font-medium text-muted hover:text-ink aria-[current=page]:bg-ink aria-[current=page]:text-white aria-[current=page]:shadow-[inset_0_1px_0_rgba(255,255,255,0.18),inset_0_-4px_8px_-4px_rgba(0,0,0,0.4),0_6px_14px_-6px_rgba(26,16,48,0.5)]';
   return (
     <div className="min-h-screen flex flex-col">
       {!supabaseConfigured && (

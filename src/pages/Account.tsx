@@ -68,7 +68,7 @@ export default function Account() {
         </>)}
       </section>
       <Link to="/wallet" className="tile card tile-wash flex aspect-[2/1] flex-col justify-between p-6 sm:aspect-auto">
-        <img src="/brand/doorstep-emblem-v4-gradient.png" alt="" className="emblem-3d h-10 w-10" />
+        <img src="/brand/doorstep-emblem-v4-gradient.png" alt="" className="h-10 w-10" />
         <span className="font-display text-lg font-semibold">Your tickets →</span>
       </Link>
       </div>

@@ -27,7 +27,7 @@ export function EventHeader({ ev }: { ev: any }) {
       <div className={`tile card aspect-[16/10] sm:aspect-[16/9] ${ev.image_url ? '' : 'tile-wash'}`}>
         {ev.image_url
           ? <img src={ev.image_url} alt="" className="tile-bg" />
-          : <img src="/brand/doorstep-emblem-v4-gradient.png" alt="" className="emblem-3d absolute left-1/2 top-[40%] w-1/5 -translate-x-1/2 -translate-y-1/2" />}
+          : <img src="/brand/doorstep-emblem-v4-gradient.png" alt="" className="absolute left-1/2 top-[40%] w-1/5 -translate-x-1/2 -translate-y-1/2" />}
         <div className="glass absolute inset-x-3 bottom-3 rounded-[22px] p-4 sm:inset-x-4 sm:bottom-4 sm:p-5">
           <p className="eyebrow !text-ink/70">{eventDateLong(ev.starts_at, tz)}</p>
           <h1 className="text-2xl font-bold leading-tight sm:text-4xl">{ev.title}</h1>

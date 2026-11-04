@@ -65,7 +65,7 @@ export default function Wallet() {
                   : revealed ? (<><Qr value={t.barcode!} /><p className="font-mono text-lg tracking-[0.2em]">{t.barcode}</p></>)
                   : (
                     <div className="tile-wash rounded-[22px] px-4 py-8">
-                      <img src="/brand/doorstep-emblem-v4-gradient.png" alt="" className="emblem-3d mx-auto mb-3 h-12 w-12" />
+                      <img src="/brand/doorstep-emblem-v4-gradient.png" alt="" className="mx-auto mb-3 h-12 w-12" />
                       <p className="font-semibold">Your ticket lands {untilText(t.reveal_at)}</p>
                       <p className="text-sm text-muted">{eventDateLong(t.reveal_at, t.timezone)}, {eventTime(t.reveal_at, t.timezone)}. We’ll email you.</p>
                     </div>
