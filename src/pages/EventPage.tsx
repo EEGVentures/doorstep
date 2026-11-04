@@ -5,7 +5,6 @@ import { supabase } from '@/lib/supabase';
 import { useAuth, useMembership } from '@/lib/auth';
 import { eventDateLong, eventTime, pounds2 } from '@/lib/format';
 import { photoName } from '@/components/EventTile';
-import { travel, useArea } from '@/lib/area';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Loader, Notice, PrimaryLink } from '@/components/ui';
 import { TicketPicker, type TicketTypeView } from '@/components/TicketPicker';
@@ -40,8 +39,6 @@ export function useEvent(slug: string | undefined) {
 
 export function EventHeader({ ev }: { ev: any }) {
   const tz = ev.venue.timezone;
-  const { area } = useArea();
-  const away = travel(area, ev.venue.lat, ev.venue.lng);
   return (
     <div className="space-y-4">
       <div className={`tile tile-hero aspect-[4/5] sm:aspect-[16/9] ${ev.image_url ? "!bg-transparent" : "tile-wash"}`}>
@@ -50,7 +47,7 @@ export function EventHeader({ ev }: { ev: any }) {
         <div className={`absolute inset-x-0 bottom-0 rounded-b-[28px] p-5 sm:p-8 ${ev.image_url ? 'hero-caption pt-24 text-white sm:pt-32' : 'text-ink'}`}>
           <p className={`text-sm font-medium tabular-nums sm:text-base ${ev.image_url ? 'text-white/80' : 'text-ink/70'}`}>{eventDateLong(ev.starts_at, tz)}</p>
           <h1 className={`mt-1 text-3xl font-bold leading-[1.08] sm:text-5xl ${ev.image_url ? '!text-white' : ''}`}>{ev.title}</h1>
-          <p className={`mt-1 ${ev.image_url ? 'text-white/80' : 'text-ink/70'}`}>{ev.venue.name}, {ev.venue.city}{away && <span className="tabular-nums"> · {away.label} from {area!.outcode}</span>}</p>
+          <p className={`mt-1 ${ev.image_url ? 'text-white/80' : 'text-ink/70'}`}>{ev.venue.name}, {ev.venue.city}</p>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">

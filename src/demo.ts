@@ -57,10 +57,6 @@ const eventFor = (slug: string) => {
       { id: `${l.id}-vip`, name: 'Front row', price_pence: 2400 + i * 100, fee_pence: 200, face_value_pence: 3500, capacity: 10, sold: 10, held: 0, max_per_order: 4, sort_order: 1 },
     ] };
 };
-const outcodes: Record<string, [number, number, string]> = {
-  CF10: [51.4787, -3.1772, 'Cardiff'], CF11: [51.4747, -3.198, 'Cardiff'], CF14: [51.523, -3.201, 'Cardiff'], CF24: [51.488, -3.16, 'Cardiff'],
-  CF5: [51.483, -3.235, 'Cardiff'], BS1: [51.453, -2.593, 'Bristol'], BS3: [51.438, -2.6, 'Bristol'], BS6: [51.472, -2.6, 'Bristol'], NP20: [51.587, -3.0, 'Newport'],
-};
 // Two passes for the member's wallet: one inside the 48h window (code showing), one still counting down.
 const ticket = (l: typeof listings[number], barcode: string | null, ref: string) => ({
   id: `t-${l.id}`, status: 'valid', order_ref: ref, ticket_type: 'General admission', event_title: l.title, event_slug: l.slug, image_url: l.image_url,
@@ -73,13 +69,6 @@ const json = (body: unknown, status = 200, wait = 350) =>
   new Promise<Response>((r) => setTimeout(() => r(new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })), wait));
 
 if (DEMO) {
-  // The preview can't read a real location (the hosted page blocks it), so "Use my location" pretends you're in Grangetown, Cardiff.
-  try {
-    Object.defineProperty(navigator, 'geolocation', { configurable: true, value: {
-      getCurrentPosition: (ok: PositionCallback) => setTimeout(() => ok({ coords: { latitude: 51.4747, longitude: -3.198, accuracy: 900 }, timestamp: Date.now() } as GeolocationPosition), 700),
-      watchPosition: () => 0, clearWatch: () => {},
-    } });
-  } catch { /* leave the real one */ }
   const real = window.fetch.bind(window);
   window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url, location.href);
@@ -87,16 +76,7 @@ if (DEMO) {
     if (p.includes('/rest/v1/event_listings')) return json(listings, 200, 700);
     if (p.includes('/rest/v1/events')) return json(eventFor(decodeURIComponent((url.searchParams.get('slug') ?? '').replace(/^eq\./, ''))), 200, 300);
     if (p.includes('/rest/v1/rpc/has_active_membership')) return json(demoRole() === 'member');
-    if (url.hostname === 'api.postcodes.io' && url.searchParams.has('lat')) {
-      const la = Number(url.searchParams.get('lat')), lo = Number(url.searchParams.get('lon'));
-      const [code, o] = Object.entries(outcodes).sort(([, a], [, b]) => Math.hypot(a[0] - la, a[1] - lo) - Math.hypot(b[0] - la, b[1] - lo))[0];
-      return json({ status: 200, result: [{ outcode: code, latitude: o[0], longitude: o[1], admin_district: [o[2]] }] }, 200, 300);
-    }
-    if (url.hostname === 'api.postcodes.io') {
-      const code = decodeURIComponent(p.split('/').pop() ?? '').toUpperCase();
-      const o = outcodes[code];
-      return o ? json({ status: 200, result: { outcode: code, latitude: o[0], longitude: o[1], admin_district: [o[2]] } }) : json({ status: 404, error: 'Outcode not found' }, 404);
-    }
+    if (p.endsWith('/api/geo')) return json({ city: 'Cardiff', country: 'GB', lat: 51.48, lng: -3.18 }, 200, 250);
     if (p.includes('/rest/v1/my_tickets')) return json(demoRole() === 'member' ? myTickets : []);
     if (p.includes('/rest/v1/profiles')) return json({ id: demoSession()?.user.id, email: 'preview@doorstep.live', first_name: 'Preview', last_name: 'Member', role: 'customer', marketing_email_consent: true });
     if (p.includes('/rest/v1/')) return json([]);

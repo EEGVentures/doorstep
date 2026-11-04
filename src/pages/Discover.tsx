@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth, useMembership } from '@/lib/auth';
-import { locateMe, lookupArea, NEAR_KM, travel, useArea, type Area } from '@/lib/area';
+import { useCity } from '@/lib/city';
 import { Empty, Loader, PrimaryLink } from '@/components/ui';
 import { EventTile, TileSkeleton, type TileSize } from '@/components/EventTile';
 
@@ -100,7 +100,9 @@ type When = 'any' | 'tonight' | 'weekend' | 'week';
 const WHEN: { value: When; label: string }[] = [
   { value: 'any', label: 'Any night' }, { value: 'tonight', label: 'Tonight' }, { value: 'weekend', label: 'This weekend' }, { value: 'week', label: 'This week' },
 ];
-const HEADING: Record<When, string> = { any: 'On your doorstep', tonight: 'Tonight on your doorstep', weekend: 'This weekend on your doorstep', week: 'This week on your doorstep' };
+const HEADING: Record<When, (c: string) => string> = {
+  any: (c) => `What’s on in ${c}`, tonight: (c) => `Tonight in ${c}`, weekend: (c) => `This weekend in ${c}`, week: (c) => `This week in ${c}`,
+};
 
 function inWindow(iso: string, when: When, now = new Date()) {
   const t = new Date(iso);
@@ -115,42 +117,28 @@ function inWindow(iso: string, when: When, now = new Date()) {
   return t >= fri && t < mon;
 }
 
-/** First thing a new visitor sees: where's your doorstep? Location first, postcode as the fallback. */
-function AreaPrompt({ onSet }: { onSet: (a: Area) => void }) {
-  const [mode, setMode] = useState<'locate' | 'postcode'>('locate');
-  const [code, setCode] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  async function run(fn: () => Promise<Area>) {
-    setBusy(true); setErr(null);
-    try { onSet(await fn()); } catch (x) { setErr((x as Error).message); setMode('postcode'); } finally { setBusy(false); }
-  }
+/** City tabs: big type, with the coral-to-amber line sliding under the chosen city. */
+function CityTabs({ cities, value, onChange }: { cities: { name: string; count: number }[]; value: string; onChange: (c: string) => void }) {
+  const wrap = useRef<HTMLDivElement>(null);
+  const [bar, setBar] = useState<{ x: number; w: number } | null>(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = wrap.current?.querySelector<HTMLButtonElement>(`[data-city="${CSS.escape(value)}"]`);
+      if (el) setBar({ x: el.offsetLeft, w: el.offsetWidth });
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [value, cities.map((c) => c.name).join('|')]);
   return (
-    <div className="space-y-3">
-      <p className="font-display text-lg font-semibold text-ink">Where’s your doorstep?</p>
-      {mode === 'locate' ? (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-          <button className="btn-primary" onClick={() => run(locateMe)} disabled={busy}>
-            <span>
-              <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true"><path d="M12 2.5l7.5 19-7.5-4-7.5 4z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" transform="rotate(45 12 12)" /></svg>
-              <span key={busy ? 'b' : 'i'} className="swap">{busy ? 'Finding you' : 'Use my location'}</span>
-            </span>
-          </button>
-          <button className="press text-sm font-medium text-ink underline decoration-coral decoration-2 underline-offset-4" onClick={() => setMode('postcode')}>Enter a postcode instead</button>
-        </div>
-      ) : (
-        <form onSubmit={(e: FormEvent) => { e.preventDefault(); run(() => lookupArea(code)); }} className="glass flex w-full max-w-md items-center gap-1 rounded-full p-1.5" noValidate>
-          <label htmlFor="area-code" className="sr-only">Postcode</label>
-          <input id="area-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Your postcode, like CF11 7EN" autoFocus
-            autoComplete="postal-code" className="min-w-0 flex-1 bg-transparent px-4 py-2 text-ink placeholder:text-muted/80 focus:outline-none" />
-          <button className="btn-primary shrink-0" disabled={busy || code.trim().length < 2}>
-            <span className="!px-5 !py-2.5"><span key={busy ? 'b' : 'i'} className="swap">{busy ? 'Finding' : 'Show me'}</span><span className="arrow" aria-hidden="true">→</span></span>
-          </button>
-        </form>
-      )}
-      <p className={`text-sm ${err ? 'text-action' : 'text-muted'}`} role={err ? 'alert' : undefined}>
-        {err ?? 'We only use it to show what’s close and how long it takes to get there. It stays on this device.'}
-      </p>
+    <div ref={wrap} role="tablist" aria-label="City" className="relative -mx-1 flex gap-6 overflow-x-auto px-1 pb-3 sm:gap-9">
+      {cities.map((c) => (
+        <button key={c.name} role="tab" aria-selected={c.name === value} data-city={c.name} onClick={() => onChange(c.name)}
+          className={`press whitespace-nowrap font-display text-2xl font-semibold transition-colors duration-200 sm:text-4xl ${c.name === value ? 'text-ink' : 'text-ink/30 hover:text-ink/60'}`}>
+          {c.name}<sup className="ml-1 align-super text-xs font-medium tabular-nums text-muted sm:text-sm">{c.count}</sup>
+        </button>
+      ))}
+      {bar && <span aria-hidden="true" className="city-bar" style={{ width: bar.w, transform: `translateX(${bar.x}px)` }} />}
     </div>
   );
 }
@@ -168,7 +156,6 @@ function MemberTile({ style }: { style?: CSSProperties }) {
 }
 
 export default function Discover() {
-  const { area, setArea } = useArea();
   const [when, setWhen] = useState<When>('any');
   const [leaving, setLeaving] = useState(false);
   const stagger = useRef(true);
@@ -187,19 +174,22 @@ export default function Discover() {
   const slow = useAfter(q.isPending, 1000);
   const showMember = !(session && member.data);
 
-  const { near, far } = useMemo(() => {
-    const all = (q.data ?? []).filter((e) => inWindow(e.starts_at, when)).map((e) => ({ e, away: travel(area, e.venue_lat, e.venue_lng) }));
-    if (!area) return { near: all, far: [] as typeof all };
-    return { near: all.filter((x) => !x.away || x.away.km <= NEAR_KM), far: all.filter((x) => x.away && x.away.km > NEAR_KM) };
-  }, [q.data, when, area]);
+  const { cities, city, choose, detected } = useCity(q.data);
+  const near = useMemo(() => (q.data ?? []).filter((e) => e.venue_city === city && inWindow(e.starts_at, when)).map((e) => ({ e })),
+    [q.data, when, city]);
 
   useEffect(() => { if (q.isSuccess) { const t = setTimeout(() => { stagger.current = false; }, 600); return () => clearTimeout(t); } }, [q.isSuccess]);
-  useReveal(grid, [when, area?.outcode, q.data]);
+  useReveal(grid, [when, city, q.data]);
 
   function pick(v: When) {
     if (v === when) return;
     setLeaving(true);
     setTimeout(() => { setWhen(v); setLeaving(false); }, 150);
+  }
+  function pickCity(c: string) {
+    if (c === city) return;
+    setLeaving(true);
+    setTimeout(() => { choose(c); setLeaving(false); }, 150);
   }
 
   // Lead with the soonest House favourite (staff pick) in view; otherwise the soonest night with a photo.
@@ -217,9 +207,7 @@ export default function Discover() {
     <div className="ambient space-y-8">
       <section className="space-y-5">
         <h1 className="text-4xl font-bold leading-[1.08] tracking-[-0.01em] sm:text-6xl">Good nights out, <span className="brand-underline">on your Doorstep.</span></h1>
-        {area ? (
-          <p className="text-lg text-muted">Gigs, comedy, theatre and more close to <button onClick={() => setArea(null)} className="press font-semibold text-ink underline decoration-coral decoration-2 underline-offset-4" aria-label={`Change area, currently ${area.label}`}>{area.label}</button>.</p>
-        ) : <AreaPrompt onSet={setArea} />}
+        <p className="max-w-xl text-lg text-muted">Gigs, comedy, theatre and more at venues near you, at member prices.</p>
       </section>
 
       {q.isPending && (
@@ -238,39 +226,31 @@ export default function Discover() {
         </div>
       )}
 
-      {q.isSuccess && (
+      {q.isSuccess && city && (
         <section className="space-y-4">
+          <div>
+            <CityTabs cities={cities} value={city} onChange={pickCity} />
+            {detected && <p className="mt-1 text-sm text-muted">Showing {city}, the closest to you. Pick another city any time.</p>}
+          </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-2xl font-semibold sm:text-3xl">{HEADING[when]}</h2>
-              <p className="text-sm tabular-nums text-muted">{near.length} night{near.length === 1 ? '' : 's'} out{area ? ` within ${NEAR_KM} km of ${area.outcode}` : ''}</p>
+              <h2 className="text-xl font-semibold sm:text-2xl">{HEADING[when](city)}</h2>
+              <p className="text-sm tabular-nums text-muted">{near.length} night{near.length === 1 ? '' : 's'} out</p>
             </div>
             <Segmented label="When" options={WHEN} value={when} onChange={pick} />
           </div>
           {near.length === 0 || !lead ? (
             <Empty title={when === 'tonight' ? 'Nothing on tonight, yet' : 'It’s quiet on your doorstep'}>
-              {far.length > 0 ? 'There’s more a little further afield, below.' : 'New nights out land every week. Try another night.'}
+              New nights out land every week. Try another night, or another city.
             </Empty>
           ) : (
-            <div className="bento-wrap" ref={grid}><div key={when + (area?.outcode ?? '')} className={`bento ${leaving ? 'grid-leaving' : ''}`}>
-              <EventTile e={lead.e} away={lead.away?.label} size="big" className="reveal" style={delay()} />
-              {firstRow.map((x) => <EventTile key={x.e.id} e={x.e} away={x.away?.label} className="reveal" style={delay()} />)}
+            <div className="bento-wrap" ref={grid}><div key={when + city} className={`bento ${leaving ? 'grid-leaving' : ''}`}>
+              <EventTile e={lead.e} size="big" className="reveal" style={delay()} />
+              {firstRow.map((x) => <EventTile key={x.e.id} e={x.e} className="reveal" style={delay()} />)}
               {showMember && <MemberTile style={delay()} />}
-              {after.map((x, k) => <EventTile key={x.e.id} e={x.e} away={x.away?.label} size={sizes[k]} className="reveal" style={delay()} />)}
+              {after.map((x, k) => <EventTile key={x.e.id} e={x.e} size={sizes[k]} className="reveal" style={delay()} />)}
             </div></div>
           )}
-        </section>
-      )}
-
-      {far.length > 0 && (
-        <section className="space-y-4">
-          <div>
-            <h2 className="text-xl font-semibold">Worth the trip</h2>
-            <p className="text-sm text-muted">Further than {NEAR_KM} km from {area?.outcode}.</p>
-          </div>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-            {far.map((x) => <EventTile key={x.e.id} e={x.e} away={x.away?.label} className="aspect-[4/5] sm:aspect-square" />)}
-          </div>
         </section>
       )}
 

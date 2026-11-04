@@ -62,3 +62,9 @@ The preview build (`scripts/build-demo.sh`) shows all of it with sample data.
 - **Location first.** "Use my location" is the main way in: the browser's location here, and expo-location in the iOS app. It's rounded to about 1km and named by the nearest postcode district. Typing a postcode is the fallback, and it opens automatically if location is refused.
 - **No house-shaped tile.** It cost too much of the page. The lead is now a **House favourite**: a premium night picked by Doorstep staff (`events.house_favourite`). It's a big rectangle with a thin coral-to-amber house outline drawn inside the photo. The roof peak touches the top edge, the outline is open at the bottom like a doorway, and "HOUSE FAVOURITE" runs up the outside of the left wall (Nathan, 4 Nov). Every other tile is a same-size thumbnail grouped around it. With no favourite in view, the soonest night with a photo leads, without the outline.
 - **Door passes explained.** The wallet opens with "How door passes work" in three steps with gradient-ring numbers: booked, code lands 48h before doors, show it at the door. It can be hidden, and that choice is remembered on the device.
+
+### City tabs replace location (Nathan, 4 Nov 2026, 18:45)
+
+- **No postcode and no location prompt.** Events are grouped by their venue's city, and Discover shows big city tabs with the coral-to-amber line sliding under the chosen one. A first visit opens on the city nearest the visitor's connection: `/api/geo` reads Vercel's city-level IP headers and stores nothing. Picking a tab is remembered on the device and always wins. Travel times and "Worth the trip" are gone. `src/lib/area.ts` was replaced by `src/lib/city.ts`.
+- **House favourite label.** "HOUSE FAVOURITE" is sized to the tile (`5cqw`, bold) so it runs most of the length of the left wall.
+- Privacy policy needs a line: we use the approximate city from your connection to choose which city to show first, and we don't store it.

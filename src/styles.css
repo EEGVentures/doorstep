@@ -201,13 +201,15 @@
 
 /* Doorstep signature 1: House favourite. A premium staff pick leads Discover with a thin gradient house outline
    drawn inside the photo (open at the bottom like a doorway) and a "House favourite" label. */
-.house-line { position: absolute; top: 0; left: 10%; width: 80%; height: 100%; pointer-events: none; overflow: visible;
+.city-bar { position: absolute; left: 0; bottom: 0; height: 3px; border-radius: 999px; background: linear-gradient(90deg, #FF5A5F, #FF8A3D);
+  transition: transform 260ms var(--ease-in-out), width 260ms var(--ease-in-out); }
+.tile-fav { container-type: inline-size; }
+.house-line { position: absolute; top: 0; left: 9%; width: 82%; height: 100%; pointer-events: none; overflow: visible;
   filter: drop-shadow(0 0 10px rgba(255, 138, 61, 0.45)); }
-/* "HOUSE FAVOURITE" runs up the outside of the left wall, reading bottom to top. */
-.house-label { position: absolute; left: 10%; bottom: 28px; transform: translateX(calc(-100% - 6px)) rotate(180deg); writing-mode: vertical-rl;
-  font-family: Poppins, system-ui, sans-serif; font-weight: 600; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; line-height: 1;
-  color: #fff; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5); pointer-events: none; }
-@media (min-width: 640px) { .house-line { left: 6%; width: 88%; } .house-label { left: 6%; font-size: 12px; letter-spacing: 0.22em; bottom: 36px; transform: translateX(calc(-100% - 7px)) rotate(180deg); } }
+/* "HOUSE FAVOURITE" runs up the outside of the left wall, bottom to top, sized to the tile so it fills most of the wall. */
+.house-label { position: absolute; left: 9%; bottom: 4cqw; transform: translateX(calc(-100% - 1.4cqw)) rotate(180deg); writing-mode: vertical-rl;
+  font-family: Poppins, system-ui, sans-serif; font-weight: 700; font-size: 5cqw; letter-spacing: 0.16em; text-transform: uppercase; line-height: 1;
+  color: #fff; text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45); pointer-events: none; white-space: nowrap; }
 
 /* Doorstep signature 2: opening an event plays as a door opening onto the night. The new page opens from the
    middle like double doors while the photo grows into place. Only for tile-to-event navigation. */
@@ -248,7 +250,7 @@ html[data-vt='door']::view-transition-new(root) { animation: 520ms var(--ease-dr
   a.tile:hover, a.tile:active, .btn-primary:active, .chip:active { transform: none !important; }
   a.tile:hover > img.tile-bg { transform: none !important; }
   .reveal:not([data-done]) { transform: none !important; } .reveal > img.tile-bg { clip-path: none !important; }
-  .seg-active { transition: none; }
+  .seg-active, .city-bar { transition: none; }
   .skeleton { animation: none; }
   ::view-transition-group(*) { animation: none; }
   html[data-vt='door']::view-transition-new(root) { animation-name: fade-in; }
