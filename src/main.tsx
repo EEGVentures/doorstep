@@ -19,7 +19,7 @@ import Press from './pages/Press';
 import { Empty } from './components/ui';
 import { DemoBar } from './components/DemoBar';
 
-const router = (DEMO ? createMemoryRouter : createBrowserRouter)([{
+const routes = [{
   element: <Layout />,
   children: [
     { path: '/', element: <Discover /> },
@@ -34,7 +34,9 @@ const router = (DEMO ? createMemoryRouter : createBrowserRouter)([{
     { path: '/press', element: <Press /> },
     { path: '*', element: <Empty title="Wrong door">That page doesn’t exist. Head back to what’s on near you.</Empty> },
   ],
-}]);
+}];
+// The preview runs from a static file, so it uses an in-memory router; a #/path hash picks the starting page.
+const router = DEMO ? createMemoryRouter(routes, { initialEntries: [location.hash.slice(1) || '/'] }) : createBrowserRouter(routes);
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } });
 

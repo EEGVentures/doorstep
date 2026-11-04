@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Checkout preview</title>
+<!-- Preview build only: stands in for the hosted card checkout so the walkthrough video can show a full booking. Takes no card details. -->
+<style>
+  @font-face { font-family: 'Poppins'; font-weight: 600; src: url('../brand/fonts/Poppins-SemiBold.ttf'); }
+  @font-face { font-family: 'Poppins'; font-weight: 700; src: url('../brand/fonts/Poppins-Bold.ttf'); }
+  @font-face { font-family: 'Inter'; font-weight: 100 900; src: url('../brand/fonts/Inter-Variable.ttf'); }
+  :root { --ink: #1A1030; --muted: #655E6B; --line: #E6DFDC; --canvas: #FCFAF8; --ease: cubic-bezier(0.23, 1, 0.32, 1); }
+  * { box-sizing: border-box; margin: 0; }
+  body { font: 15px/1.45 Inter, system-ui, sans-serif; color: var(--ink); background: var(--canvas); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 460px; margin: 0 auto; padding: 18px 16px 40px; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  header img { height: 26px; }
+  .secure { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  h1 { font: 700 26px/1.1 Poppins, sans-serif; margin-bottom: 4px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 18px; }
+  .card { background: #fff; border-radius: 24px; border: 1px solid rgba(230,223,220,.55); box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(26,16,48,.04), 0 12px 32px -16px rgba(26,16,48,.14); }
+  .order { display: flex; gap: 12px; padding: 12px; align-items: center; }
+  .order img { width: 72px; height: 72px; border-radius: 16px; object-fit: cover; flex: none; }
+  .order b { font: 600 16px/1.2 Poppins, sans-serif; display: block; }
+  .order small { color: var(--muted); font-size: 13px; display: block; margin-top: 2px; }
+  .lines { padding: 4px 16px 14px; font-size: 14px; }
+  .lines div { display: flex; justify-content: space-between; padding: 6px 0; }
+  .lines .total { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 10px; font-weight: 700; font-size: 16px; }
+  .label { font-size: 12px; font-weight: 600; color: var(--muted); margin: 18px 0 8px; letter-spacing: .02em; }
+  .field { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; font-size: 15px; display: flex; justify-content: space-between; align-items: center; min-height: 48px; }
+  .row { display: flex; gap: 10px; margin-top: 10px; }
+  .row .field { flex: 1; }
+  .caret { display: inline-block; width: 1.5px; height: 18px; background: var(--ink); vertical-align: -3px; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+  .field.on { border-color: var(--ink); box-shadow: 0 0 0 3px rgba(26,16,48,.06); }
+  @keyframes blink { 50% { opacity: 0; } }
+  .brandmark { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
+  .pay { margin-top: 20px; width: 100%; border: 0; padding: 2px; border-radius: 999px; background: linear-gradient(90deg, #FF5A5F, #FF8A3D); cursor: pointer;
+         box-shadow: 0 6px 16px -6px rgba(255,90,95,.45), 0 2px 4px rgba(26,16,48,.08); transition: transform 160ms var(--ease); font: inherit; }
+  .pay:active { transform: scale(.97); }
+  .pay span { display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 999px; padding: 14px 20px; font-weight: 700; font-size: 16px; color: var(--ink);
+              background-image: linear-gradient(115deg, #FF5A5F 0%, #FF8A3D 50%, #fff 50%, #fff 100%); background-size: 250% 100%; background-position: 100% 0;
+              transition: background-position 300ms var(--ease), color 250ms var(--ease); }
+  .pay.busy span { background-position: 0 0; color: #fff; }
+  .spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; animation: spin .7s linear infinite; display: none; }
+  .pay.busy .spin { display: inline-block; }
+  .pay.busy .arrow { display: none; }
+  .arrow { color: #FF5A5F; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .done { display: none; flex-direction: column; align-items: center; text-align: center; padding: 36px 16px; gap: 10px; }
+  .done img { width: 56px; height: 56px; animation: pop 500ms var(--ease) both; }
+  .done b { font: 700 22px/1.2 Poppins, sans-serif; }
+  .done p { color: var(--muted); font-size: 14px; }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } }
+  .fine { margin-top: 14px; font-size: 12px; color: var(--muted); text-align: center; }
+  .test { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink); background: #FFF0EB; border-radius: 999px; padding: 3px 9px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="../brand/doorstep-lockup-c-light.png" alt="Doorstep">
+    <span class="secure"><svg width="12" height="14" viewBox="0 0 12 14" fill="none"><rect x="1" y="6" width="10" height="7.5" rx="2" stroke="#655E6B" stroke-width="1.5"/><path d="M3.5 6V4.5a2.5 2.5 0 0 1 5 0V6" stroke="#655E6B" stroke-width="1.5"/></svg>Secure checkout</span>
+  </header>
+  <div id="form">
+    <h1>Almost in</h1>
+    <p class="sub">Pay to book. We’re holding your tickets for <b id="hold">29:58</b>.</p>
+    <div class="card">
+      <div class="order"><img id="img" alt=""><div><b id="t"></b><small id="v"></small><small id="w"></small></div></div>
+      <div class="lines">
+        <div><span id="ln"></span><span id="lp"></span></div>
+        <div class="total"><span>Total</span><span id="tot"></span></div>
+      </div>
+    </div>
+    <p class="label">CARD</p>
+    <div class="field on" id="num"><span id="numv"></span><span class="brandmark">CARD</span></div>
+    <div class="row"><div class="field" id="exp">12 / 28</div><div class="field" id="cvc">•••</div></div>
+    <button class="pay" id="pay"><span><i class="spin"></i><span id="paylbl" style="all:unset">Pay</span><span class="arrow" style="all:unset;color:#FF5A5F">→</span></span></button>
+    <p class="fine"><span class="test">Preview</span> No real payment is taken.</p>
+  </div>
+  <div class="card done" id="done">
+    <img src="../brand/doorstep-emblem-v4-gradient.png" alt="">
+    <b>You’re in</b>
+    <p>Order <span id="ref"></span> is booked. Opening your door passes…</p>
+  </div>
+</div>
+<script>
+  const q = new URLSearchParams(location.search), $ = (id) => document.getElementById(id);
+  const gbp = (p) => '£' + (p / 100).toFixed(2);
+  const qty = +q.get('qty') || 1, each = +q.get('each') || 0;
+  const d = new Date(q.get('when'));
+  $('img').src = '../' + q.get('img'); $('t').textContent = q.get('t'); $('v').textContent = q.get('v');
+  $('w').textContent = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' + d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(' ', '');
+  $('ln').textContent = `${qty} × ${q.get('tt')}`; $('lp').textContent = gbp(each * qty); $('tot').textContent = gbp(each * qty);
+  $('paylbl').textContent = 'Pay ' + gbp(each * qty); $('ref').textContent = q.get('ref');
+  // Type the card number in, as if filled by the phone's autofill.
+  const num = '4242 4242 4242 4242'; let k = 0;
+  const typing = setInterval(() => { $('numv').innerHTML = num.slice(0, ++k) + '<i class="caret"></i>'; if (k >= num.length) { clearInterval(typing); $('numv').textContent = num; $('num').classList.remove('on'); } }, 28);
+  $('pay').onclick = () => {
+    $('pay').classList.add('busy'); $('paylbl').textContent = 'Paying';
+    setTimeout(() => {
+      $('form').style.display = 'none'; $('done').style.display = 'flex';
+      try { const b = JSON.parse(localStorage.getItem('ds_demo_bought')); b.at = Date.now(); localStorage.setItem('ds_demo_bought', JSON.stringify(b)); } catch (e) {}
+      setTimeout(() => { location.href = '../index.html#/wallet?paid=1&order=' + encodeURIComponent(q.get('ref')); }, 1300);
+    }, 1100);
+  };
+</script>
+</body>
+</html>

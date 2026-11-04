@@ -63,7 +63,16 @@ const ticket = (l: typeof listings[number], barcode: string | null, ref: string)
   starts_at: l.starts_at, doors_at: l.doors_at, reveal_at: new Date(new Date(l.doors_at).getTime() - 48 * 3600e3).toISOString(),
   venue_name: l.venue_name, venue_city: l.venue_city, timezone: 'Europe/London', holder_first_name: 'Preview', holder_last_name: 'Member', barcode,
 });
-const myTickets = [ticket(listings[0], 'DS7K2M9QXH4P', 'DS-4F7Q2'), ticket(listings[2], null, 'DS-9C3KD')];
+const baseTickets = [ticket(listings[0], 'DS7K2M9QXH4P', 'DS-4F7Q2'), ticket(listings[2], null, 'DS-9C3KD')];
+/** Video walkthrough only (localStorage ds_demo_checkout=1): a mock checkout page, then the bought passes land a moment after "payment". */
+const myTickets = () => {
+  let bought: { slug: string; qty: number; ref: string; at: number } | null = null;
+  try { bought = JSON.parse(store.get('ds_demo_bought') ?? 'null'); } catch { /* ignore */ }
+  if (!bought || !bought.at) return baseTickets;
+  const l = listings.find((x) => x.slug === bought!.slug) ?? listings[1];
+  const fresh = Array.from({ length: bought.qty }, (_, k) => ({ ...ticket(l, null, bought!.ref), id: `t-new-${k}` }));
+  return [...fresh, ...baseTickets].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+};
 
 const json = (body: unknown, status = 200, wait = 350) =>
   new Promise<Response>((r) => setTimeout(() => r(new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })), wait));
@@ -77,10 +86,17 @@ if (DEMO) {
     if (p.includes('/rest/v1/events')) return json(eventFor(decodeURIComponent((url.searchParams.get('slug') ?? '').replace(/^eq\./, ''))), 200, 300);
     if (p.includes('/rest/v1/rpc/has_active_membership')) return json(demoRole() === 'member');
     if (p.endsWith('/api/geo')) return json({ city: 'Cardiff', country: 'GB', lat: 51.48, lng: -3.18 }, 200, 250);
-    if (p.includes('/rest/v1/my_tickets')) return json(demoRole() === 'member' ? myTickets : []);
+    if (p.includes('/rest/v1/my_tickets')) return json(demoRole() === 'member' ? myTickets() : []);
     if (p.includes('/rest/v1/profiles')) return json({ id: demoSession()?.user.id, email: 'preview@doorstep.live', first_name: 'Preview', last_name: 'Member', role: 'customer', marketing_email_consent: true });
     if (p.includes('/rest/v1/')) return json([]);
     if (p.includes('/auth/v1/')) return json({ error: 'demo' }, 400);
+    if (p.endsWith('/api/checkout') && store.get('ds_demo_checkout') === '1') {
+      const b = JSON.parse(String(init?.body ?? '{}')), l = listings.find((x) => b.ticketTypeId?.startsWith(x.id + '-')) ?? listings[1];
+      const tt = eventFor(l.slug).ticket_types.find((t) => t.id === b.ticketTypeId)!, qty = b.quantity ?? 1, ref = 'DS-7H2QK';
+      store.set('ds_demo_bought', JSON.stringify({ slug: l.slug, qty, ref, at: 0 }));
+      const q = new URLSearchParams({ t: l.title, v: `${l.venue_name}, ${l.venue_city}`, img: l.image_url ?? '', when: l.starts_at, qty: String(qty), tt: tt.name, each: String(tt.price_pence + tt.fee_pence), ref });
+      return json({ url: `demo/checkout.html?${q}` }, 200, 900);
+    }
     if (p.endsWith('/api/checkout')) return json({ error: { code: 'DEMO', message: 'This is a preview, so payments are switched off. In the real app this is where Stripe checkout opens.' } }, 409, 1400);
     if (p.includes('/api/')) return json({ error: { code: 'DEMO', message: 'Not available in the preview.' } }, 409);
     return real(input as RequestInfo, init);

@@ -15,7 +15,7 @@ export default function Layout() {
     on(); window.addEventListener('scroll', on, { passive: true });
     return () => window.removeEventListener('scroll', on);
   }, []);
-  const nav = 'press relative isolate rounded-full px-4 py-2 text-sm font-medium text-muted transition-colors duration-200 hover:text-ink aria-[current=page]:text-white';
+  const nav = 'press relative isolate rounded-full px-2 py-2 text-[13px] sm:px-4 sm:text-sm font-medium text-muted transition-colors duration-200 hover:text-ink aria-[current=page]:text-white';
   // The active pill is its own element with a shared transition name, so it slides between links on navigation.
   const item = (label: string) => ({ isActive }: { isActive: boolean }) => (<>
     {isActive && <span aria-hidden="true" className="nav-pill absolute inset-0 -z-10 rounded-full bg-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_6px_14px_-6px_rgba(26,16,48,0.5)]" />}
@@ -29,7 +29,7 @@ export default function Layout() {
       <header className="site-header sticky top-0 z-20 px-3 pt-3">
         <div className={`mx-auto flex max-w-6xl items-center justify-between gap-4 rounded-full border py-2 pl-5 pr-2 transition-[background-color,box-shadow,border-color] duration-200 ${scrolled ? 'glass' : 'border-transparent'}`}>
           <Link to="/" viewTransition aria-label="Doorstep home" className="press shrink-0"><img src="/brand/doorstep-lockup-c-light.png" alt="doorstep" className="h-6 w-auto max-w-none sm:h-7" /></Link>
-          <nav className="flex min-w-0 items-center gap-0.5 sm:gap-1">
+          <nav className="flex min-w-0 items-center sm:gap-1">
             {!partnerRoute && <NavLink to="/" end viewTransition className={nav}>{item('Discover')}</NavLink>}
             {session && <NavLink to="/wallet" viewTransition className={nav}>{item('Tickets')}</NavLink>}
             {session ? <NavLink to="/account" viewTransition className={nav}>{item('Account')}</NavLink> : <NavLink to={`/signin?next=${encodeURIComponent(pathname)}`} viewTransition className={nav}>{item('Sign in')}</NavLink>}
