@@ -201,9 +201,13 @@
 
 /* Doorstep signature 1: House favourite. A premium staff pick leads Discover with a thin gradient house outline
    drawn inside the photo (open at the bottom like a doorway) and a "House favourite" label. */
-.house-line { position: absolute; inset: 22% 6% 0; width: 88%; height: 78%; pointer-events: none; overflow: visible;
+.house-line { position: absolute; top: 0; left: 10%; width: 80%; height: 100%; pointer-events: none; overflow: visible;
   filter: drop-shadow(0 0 10px rgba(255, 138, 61, 0.45)); }
-@media (min-width: 640px) { .house-line { inset: 16% 6% 0; width: 88%; height: 84%; } }
+/* "HOUSE FAVOURITE" runs up the outside of the left wall, reading bottom to top. */
+.house-label { position: absolute; left: 10%; bottom: 28px; transform: translateX(calc(-100% - 6px)) rotate(180deg); writing-mode: vertical-rl;
+  font-family: Poppins, system-ui, sans-serif; font-weight: 600; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; line-height: 1;
+  color: #fff; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5); pointer-events: none; }
+@media (min-width: 640px) { .house-line { left: 6%; width: 88%; } .house-label { left: 6%; font-size: 12px; letter-spacing: 0.22em; bottom: 36px; transform: translateX(calc(-100% - 7px)) rotate(180deg); } }
 
 /* Doorstep signature 2: opening an event plays as a door opening onto the night. The new page opens from the
    middle like double doors while the photo grows into place. Only for tile-to-event navigation. */

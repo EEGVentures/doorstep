@@ -69,15 +69,15 @@ export function EventTile({ e, size = 'sm', style, className = '', away }: { e: 
     <Link to={`/events/${e.slug}`} viewTransition style={style} onClick={doorOpen}
       onPointerMove={big ? drift.onPointerMove : undefined} onPointerLeave={big ? drift.onPointerLeave : undefined}
       className={`tile ${sizeCls} ${photo ? '' : ink ? 'surface-ink' : 'tile-wash'} ${soldOut ? 'tile-soldout' : ''} ${className}`}
-      aria-label={`${e.title}, ${e.venue_name}, ${when}${away ? `, ${away}` : ''}${soldOut ? ', sold out' : ''}`}>
+      aria-label={`${fav ? 'House favourite: ' : ''}${e.title}, ${e.venue_name}, ${when}${away ? `, ${away}` : ''}${soldOut ? ', sold out' : ''}`}>
       {photo && <>
         <img ref={big ? drift.img : undefined} className={`tile-bg ${big ? 'tile-drift' : ''}`} src={e.image_url!} alt="" loading={big ? 'eager' : 'lazy'} style={{ viewTransitionName: photoName(e.slug) }} />
         <span className="tile-fade" />
       </>}
       {fav && <HouseLine />}
+      {fav && <span className="house-label" aria-hidden="true">House favourite</span>}
       <span className={`absolute left-3 top-3 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium tabular-nums ${dark ? 'glass-dark' : 'glass text-ink'}`}>{when}</span>
-      <span className={`absolute inset-x-0 bottom-0 flex flex-col ${fav ? 'px-[12%] pb-7 sm:pb-9' : big ? 'p-5 sm:p-7' : 'p-3 sm:p-4'} ${dark ? 'text-white' : 'text-ink'}`}>
-        {fav && <span className="mb-2 w-fit rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink">House favourite</span>}
+      <span className={`absolute inset-x-0 bottom-0 flex flex-col ${fav ? 'px-[15%] pb-7 sm:px-[12%] sm:pb-9' : big ? 'p-5 sm:p-7' : 'p-3 sm:p-4'} ${dark ? 'text-white' : 'text-ink'}`}>
         {e.category && <span className={`text-xs font-medium ${dark ? 'text-white/75' : 'text-ink/60'}`}>{e.category}</span>}
         <span className={`font-display font-semibold leading-tight ${big ? 'text-3xl sm:text-4xl' : photo ? 'line-clamp-2 text-[15px] sm:text-lg' : 'line-clamp-3 text-lg sm:text-2xl'}`}
           style={{ textWrap: 'balance' } as CSSProperties}>{e.title}</span>
@@ -98,7 +98,7 @@ function HouseLine() {
   return (
     <svg className="house-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
       <defs><linearGradient id="hl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#FF5A5F" /><stop offset="1" stopColor="#FF8A3D" /></linearGradient></defs>
-      <path d="M0 100 V24 L50 3 L100 24 V100" fill="none" stroke="url(#hl)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+ <path d="M0 100 V24 L50 0 L100 24 V100" fill="none" stroke="url(#hl)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }
