@@ -68,3 +68,7 @@ The preview build (`scripts/build-demo.sh`) shows all of it with sample data.
 - **No postcode and no location prompt.** Events are grouped by their venue's city, and Discover shows big city tabs with the coral-to-amber line sliding under the chosen one. A first visit opens on the city nearest the visitor's connection: `/api/geo` reads Vercel's city-level IP headers and stores nothing. Picking a tab is remembered on the device and always wins. Travel times and "Worth the trip" are gone. `src/lib/area.ts` was replaced by `src/lib/city.ts`.
 - **House favourite label.** "HOUSE FAVOURITE" is sized to the tile (`5cqw`, bold) so it runs most of the length of the left wall.
 - Privacy policy needs a line: we use the approximate city from your connection to choose which city to show first, and we don't store it.
+
+### City picker (Nathan, 4 Nov 2026, 19:15)
+
+The city tabs became a branded picker inside the heading: "What's on in **Cardiff** ⌄". The city has the gradient underline and a glass chevron button beside it. On desktop the panel grows from the city name; on phones it's a bottom sheet titled "Where's your doorstep?". Each city is a row with a small house outline (gradient line and a door on your city, plain outline on the others), the number of nights out, and "Your doorstep" on the chosen one. The chosen row gets the coral wash tint, which is a small tint and not a fill. A new city rolls into the heading like a departures board. Detection from the connection is unchanged (`src/lib/city.ts`), and `src/components/CityPicker.tsx` holds the picker.

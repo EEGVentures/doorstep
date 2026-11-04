@@ -6,6 +6,7 @@ import { useAuth, useMembership } from '@/lib/auth';
 import { useCity } from '@/lib/city';
 import { Empty, Loader, PrimaryLink } from '@/components/ui';
 import { EventTile, TileSkeleton, type TileSize } from '@/components/EventTile';
+import { CityPicker } from '@/components/CityPicker';
 
 export type Listing = {
   id: string; slug: string; title: string; image_url: string | null; category: string | null; starts_at: string; doors_at: string;
@@ -100,9 +101,7 @@ type When = 'any' | 'tonight' | 'weekend' | 'week';
 const WHEN: { value: When; label: string }[] = [
   { value: 'any', label: 'Any night' }, { value: 'tonight', label: 'Tonight' }, { value: 'weekend', label: 'This weekend' }, { value: 'week', label: 'This week' },
 ];
-const HEADING: Record<When, (c: string) => string> = {
-  any: (c) => `What’s on in ${c}`, tonight: (c) => `Tonight in ${c}`, weekend: (c) => `This weekend in ${c}`, week: (c) => `This week in ${c}`,
-};
+const HEADING: Record<When, string> = { any: 'What’s on in', tonight: 'Tonight in', weekend: 'This weekend in', week: 'This week in' };
 
 function inWindow(iso: string, when: When, now = new Date()) {
   const t = new Date(iso);
@@ -115,32 +114,6 @@ function inWindow(iso: string, when: When, now = new Date()) {
   const fri = new Date(startOfDay); fri.setDate(fri.getDate() + (dow === 0 ? -2 : dow === 6 ? -1 : 5 - dow)); fri.setHours(17);
   const mon = new Date(fri); mon.setDate(fri.getDate() + 3); mon.setHours(0);
   return t >= fri && t < mon;
-}
-
-/** City tabs: big type, with the coral-to-amber line sliding under the chosen city. */
-function CityTabs({ cities, value, onChange }: { cities: { name: string; count: number }[]; value: string; onChange: (c: string) => void }) {
-  const wrap = useRef<HTMLDivElement>(null);
-  const [bar, setBar] = useState<{ x: number; w: number } | null>(null);
-  useLayoutEffect(() => {
-    const measure = () => {
-      const el = wrap.current?.querySelector<HTMLButtonElement>(`[data-city="${CSS.escape(value)}"]`);
-      if (el) setBar({ x: el.offsetLeft, w: el.offsetWidth });
-    };
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [value, cities.map((c) => c.name).join('|')]);
-  return (
-    <div ref={wrap} role="tablist" aria-label="City" className="relative -mx-1 flex gap-6 overflow-x-auto px-1 pb-3 sm:gap-9">
-      {cities.map((c) => (
-        <button key={c.name} role="tab" aria-selected={c.name === value} data-city={c.name} onClick={() => onChange(c.name)}
-          className={`press whitespace-nowrap font-display text-2xl font-semibold transition-colors duration-200 sm:text-4xl ${c.name === value ? 'text-ink' : 'text-ink/30 hover:text-ink/60'}`}>
-          {c.name}<sup className="ml-1 align-super text-xs font-medium tabular-nums text-muted sm:text-sm">{c.count}</sup>
-        </button>
-      ))}
-      {bar && <span aria-hidden="true" className="city-bar" style={{ width: bar.w, transform: `translateX(${bar.x}px)` }} />}
-    </div>
-  );
 }
 
 function MemberTile({ style }: { style?: CSSProperties }) {
@@ -228,14 +201,12 @@ export default function Discover() {
 
       {q.isSuccess && city && (
         <section className="space-y-4">
-          <div>
-            <CityTabs cities={cities} value={city} onChange={pickCity} />
-            {detected && <p className="mt-1 text-sm text-muted">Showing {city}, the closest to you. Pick another city any time.</p>}
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-xl font-semibold sm:text-2xl">{HEADING[when](city)}</h2>
-              <p className="text-sm tabular-nums text-muted">{near.length} night{near.length === 1 ? '' : 's'} out</p>
+              <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">
+                {HEADING[when]} <CityPicker cities={cities} value={city} onChange={pickCity} detected={detected} />
+              </h2>
+              <p className="mt-1 text-sm tabular-nums text-muted">{near.length} night{near.length === 1 ? '' : 's'} out{detected ? ', picked from your connection' : ''}</p>
             </div>
             <Segmented label="When" options={WHEN} value={when} onChange={pick} />
           </div>

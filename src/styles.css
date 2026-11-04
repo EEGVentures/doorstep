@@ -201,8 +201,13 @@
 
 /* Doorstep signature 1: House favourite. A premium staff pick leads Discover with a thin gradient house outline
    drawn inside the photo (open at the bottom like a doorway) and a "House favourite" label. */
-.city-bar { position: absolute; left: 0; bottom: 0; height: 3px; border-radius: 999px; background: linear-gradient(90deg, #FF5A5F, #FF8A3D);
-  transition: transform 260ms var(--ease-in-out), width 260ms var(--ease-in-out); }
+/* City picker: the city sits in the heading; the panel grows from it (origin top-left), rows stagger in. */
+.city-chevron { color: #1A1030; transition: transform 200ms var(--ease-out); }
+.city-chevron.is-open { transform: rotate(180deg); }
+.city-pop { background: rgba(255, 255, 255, 0.94); font-weight: 400; line-height: 1.5; transform-origin: 24px 0; transition: opacity 180ms var(--ease-out), transform 200ms var(--ease-out); }
+@starting-style { .city-pop { opacity: 0; transform: scale(0.96) translateY(-4px); } }
+.city-item { animation: city-in 220ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 35ms); }
+@keyframes city-in { from { opacity: 0; transform: translateY(6px); } }
 .tile-fav { container-type: inline-size; }
 .house-line { position: absolute; top: 0; left: 9%; width: 82%; height: 100%; pointer-events: none; overflow: visible;
   filter: drop-shadow(0 0 10px rgba(255, 138, 61, 0.45)); }
@@ -250,7 +255,9 @@ html[data-vt='door']::view-transition-new(root) { animation: 520ms var(--ease-dr
   a.tile:hover, a.tile:active, .btn-primary:active, .chip:active { transform: none !important; }
   a.tile:hover > img.tile-bg { transform: none !important; }
   .reveal:not([data-done]) { transform: none !important; } .reveal > img.tile-bg { clip-path: none !important; }
-  .seg-active, .city-bar { transition: none; }
+  .seg-active { transition: none; }
+  .city-pop, .city-chevron { transition-property: opacity !important; }
+  .city-item { animation-name: fade-in !important; }
   .skeleton { animation: none; }
   ::view-transition-group(*) { animation: none; }
   html[data-vt='door']::view-transition-new(root) { animation-name: fade-in; }
