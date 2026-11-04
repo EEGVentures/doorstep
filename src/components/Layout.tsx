@@ -28,8 +28,8 @@ export default function Layout() {
       )}
       <header className="site-header sticky top-0 z-20 px-3 pt-3">
         <div className={`mx-auto flex max-w-6xl items-center justify-between gap-4 rounded-full border py-2 pl-5 pr-2 transition-[background-color,box-shadow,border-color] duration-200 ${scrolled ? 'glass' : 'border-transparent'}`}>
-          <Link to="/" viewTransition aria-label="Doorstep home" className="press"><img src="/brand/doorstep-lockup-c-light.png" alt="doorstep" className="h-7 w-auto" /></Link>
-          <nav className="flex items-center gap-1">
+          <Link to="/" viewTransition aria-label="Doorstep home" className="press shrink-0"><img src="/brand/doorstep-lockup-c-light.png" alt="doorstep" className="h-6 w-auto max-w-none sm:h-7" /></Link>
+          <nav className="flex min-w-0 items-center gap-0.5 sm:gap-1">
             {!partnerRoute && <NavLink to="/" end viewTransition className={nav}>{item('Discover')}</NavLink>}
             {session && <NavLink to="/wallet" viewTransition className={nav}>{item('Tickets')}</NavLink>}
             {session ? <NavLink to="/account" viewTransition className={nav}>{item('Account')}</NavLink> : <NavLink to={`/signin?next=${encodeURIComponent(pathname)}`} viewTransition className={nav}>{item('Sign in')}</NavLink>}

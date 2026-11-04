@@ -56,3 +56,9 @@ Nathan asked for the app to feel like Doorstep and not a listings page. Three id
    - "Your door passes" and "No nights booked yet" in the wallet.
 
 The preview build (`scripts/build-demo.sh`) shows all of it with sample data.
+
+### Revisions after Nathan's review (4 Nov 2026, 18:00)
+
+- **Location first.** "Use my location" is the main way in: the browser's location here, and expo-location in the iOS app. It's rounded to about 1km and named by the nearest postcode district. Typing a postcode is the fallback, and it opens automatically if location is refused.
+- **No house-shaped tile.** It cost too much of the page. The lead is now a **House favourite**: a premium night picked by Doorstep staff (`events.house_favourite`). It's a big rectangle with a thin coral-to-amber house outline drawn inside the photo, open at the bottom like a doorway, and a white "House favourite" label. Every other tile is a same-size thumbnail grouped around it. With no favourite in view, the soonest night with a photo leads, without the outline.
+- **Door passes explained.** The wallet opens with "How door passes work" in three steps with gradient-ring numbers: booked, code lands 48h before doors, show it at the door. It can be hidden, and that choice is remembered on the device.

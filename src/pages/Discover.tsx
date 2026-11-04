@@ -3,14 +3,14 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperti
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth, useMembership } from '@/lib/auth';
-import { lookupArea, NEAR_KM, travel, useArea, type Area } from '@/lib/area';
+import { locateMe, lookupArea, NEAR_KM, travel, useArea, type Area } from '@/lib/area';
 import { Empty, Loader, PrimaryLink } from '@/components/ui';
 import { EventTile, TileSkeleton, type TileSize } from '@/components/EventTile';
 
 export type Listing = {
   id: string; slug: string; title: string; image_url: string | null; category: string | null; starts_at: string; doors_at: string;
   status: string; venue_name: string; venue_city: string; timezone: string; from_price_pence: number | null; tickets_left: number;
-  venue_lat?: number | null; venue_lng?: number | null;
+  venue_lat?: number | null; venue_lng?: number | null; house_favourite?: boolean;
 };
 
 /** True once `on` has stayed true for `ms`. The waving loader only appears for waits over a second. */
@@ -115,28 +115,43 @@ function inWindow(iso: string, when: When, now = new Date()) {
   return t >= fri && t < mon;
 }
 
-/** First thing a new visitor sees: where's your doorstep? Everything after that is local. */
+/** First thing a new visitor sees: where's your doorstep? Location first, postcode as the fallback. */
 function AreaPrompt({ onSet }: { onSet: (a: Area) => void }) {
+  const [mode, setMode] = useState<'locate' | 'postcode'>('locate');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  async function submit(e: FormEvent) {
-    e.preventDefault();
+  async function run(fn: () => Promise<Area>) {
     setBusy(true); setErr(null);
-    try { onSet(await lookupArea(code)); } catch (x) { setErr((x as Error).message); } finally { setBusy(false); }
+    try { onSet(await fn()); } catch (x) { setErr((x as Error).message); setMode('postcode'); } finally { setBusy(false); }
   }
   return (
-    <form onSubmit={submit} className="space-y-2" noValidate>
-      <label htmlFor="area-code" className="block font-display text-lg font-semibold text-ink">Where’s your doorstep?</label>
-      <div className="glass flex w-full max-w-md items-center gap-1 rounded-full p-1.5">
-        <input id="area-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Your postcode, like CF11 7EN"
-          autoComplete="postal-code" inputMode="text" className="min-w-0 flex-1 bg-transparent px-4 py-2 text-ink placeholder:text-muted/80 focus:outline-none" />
-        <button className="btn-primary shrink-0" disabled={busy || code.trim().length < 2}>
-          <span className="!px-5 !py-2.5"><span key={busy ? 'b' : 'i'} className="swap">{busy ? 'Finding' : 'Show me'}</span><span className="arrow" aria-hidden="true">→</span></span>
-        </button>
-      </div>
-      <p className={`text-sm ${err ? 'text-action' : 'text-muted'}`} role={err ? 'alert' : undefined}>{err ?? 'We use the first half of your postcode to show what’s close. It stays on this device.'}</p>
-    </form>
+    <div className="space-y-3">
+      <p className="font-display text-lg font-semibold text-ink">Where’s your doorstep?</p>
+      {mode === 'locate' ? (
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+          <button className="btn-primary" onClick={() => run(locateMe)} disabled={busy}>
+            <span>
+              <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true"><path d="M12 2.5l7.5 19-7.5-4-7.5 4z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" transform="rotate(45 12 12)" /></svg>
+              <span key={busy ? 'b' : 'i'} className="swap">{busy ? 'Finding you' : 'Use my location'}</span>
+            </span>
+          </button>
+          <button className="press text-sm font-medium text-ink underline decoration-coral decoration-2 underline-offset-4" onClick={() => setMode('postcode')}>Enter a postcode instead</button>
+        </div>
+      ) : (
+        <form onSubmit={(e: FormEvent) => { e.preventDefault(); run(() => lookupArea(code)); }} className="glass flex w-full max-w-md items-center gap-1 rounded-full p-1.5" noValidate>
+          <label htmlFor="area-code" className="sr-only">Postcode</label>
+          <input id="area-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Your postcode, like CF11 7EN" autoFocus
+            autoComplete="postal-code" className="min-w-0 flex-1 bg-transparent px-4 py-2 text-ink placeholder:text-muted/80 focus:outline-none" />
+          <button className="btn-primary shrink-0" disabled={busy || code.trim().length < 2}>
+            <span className="!px-5 !py-2.5"><span key={busy ? 'b' : 'i'} className="swap">{busy ? 'Finding' : 'Show me'}</span><span className="arrow" aria-hidden="true">→</span></span>
+          </button>
+        </form>
+      )}
+      <p className={`text-sm ${err ? 'text-action' : 'text-muted'}`} role={err ? 'alert' : undefined}>
+        {err ?? 'We only use it to show what’s close and how long it takes to get there. It stays on this device.'}
+      </p>
+    </div>
   );
 }
 
@@ -187,12 +202,14 @@ export default function Discover() {
     setTimeout(() => { setWhen(v); setLeaving(false); }, 150);
   }
 
-  // Lead with the soonest night that has a photo: the house-shaped tile needs a picture to carry it.
-  const leadIdx = Math.max(0, near.findIndex((x) => x.e.image_url));
+  // Lead with the soonest House favourite (staff pick) in view; otherwise the soonest night with a photo.
+  const favIdx = near.findIndex((x) => x.e.house_favourite && x.e.image_url);
+  const leadIdx = favIdx >= 0 ? favIdx : Math.max(0, near.findIndex((x) => x.e.image_url));
   const [lead, ...rest] = near.length ? [near[leadIdx], ...near.filter((_, k) => k !== leadIdx)] : [];
   const firstRow = rest.slice(0, showMember ? 3 : 4);
   const after = rest.slice(firstRow.length);
-  const sizes = bentoSizes(after.length);
+  // Everything around the lead is a same-size thumbnail, so the House favourite is the one big moment.
+  const sizes: TileSize[] = after.map(() => 'sm');
   let i = 0;
   const delay = (): CSSProperties => ({ ['--i' as string]: stagger.current ? i++ : 0 });
 

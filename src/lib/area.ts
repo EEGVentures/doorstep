@@ -13,6 +13,29 @@ export function useArea() {
   return { area, setArea };
 }
 
+const round = (n: number) => Math.round(n * 100) / 100; // ~1km: enough for "9 min walk", no exact address kept
+
+/**
+ * "Use my location": the device's position (browser here; expo-location in the iOS app), rounded to ~1km,
+ * named by the nearest postcode district so the page can say "close to CF11, Cardiff".
+ */
+export function locateMe(): Promise<Area> {
+  return new Promise((resolve, reject) => {
+    if (!('geolocation' in navigator)) return reject(new Error('This device can’t share its location. Enter a postcode instead.'));
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = round(pos.coords.latitude), lng = round(pos.coords.longitude);
+      try {
+        const res = await fetch(`https://api.postcodes.io/outcodes?lon=${lng}&lat=${lat}&limit=1`);
+        const { result } = await res.json();
+        const o = result?.[0];
+        const town = (o?.admin_district?.[0] as string | undefined) ?? '';
+        resolve({ outcode: o?.outcode ?? 'you', label: o ? (town ? `${o.outcode}, ${town}` : o.outcode) : 'your location', lat, lng });
+      } catch { resolve({ outcode: 'you', label: 'your location', lat, lng }); }
+    }, (err) => reject(new Error(err.code === err.PERMISSION_DENIED ? 'Location is switched off for Doorstep. You can enter a postcode instead.' : 'We couldn’t get your location. Enter a postcode instead.')),
+    { enableHighAccuracy: false, timeout: 10_000, maximumAge: 10 * 60_000 });
+  });
+}
+
 /** Turns "CF11 7EN" or "cf11" into an outcode and looks up its centre (postcodes.io, free, no key). */
 export async function lookupArea(input: string): Promise<Area> {
   const outcode = input.trim().toUpperCase().replace(/\s+/g, ' ').split(' ')[0];

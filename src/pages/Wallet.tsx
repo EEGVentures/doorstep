@@ -86,6 +86,35 @@ function DoorPass({ t }: { t: WalletTicket }) {
   );
 }
 
+/** What a door pass is, in three steps. Collapsible once you've read it (remembered on this device). */
+function PassExplainer() {
+  const [open, setOpen] = useState(() => { try { return localStorage.getItem('ds_pass_help') !== 'closed'; } catch { return true; } });
+  const toggle = () => { setOpen((o) => { try { localStorage.setItem('ds_pass_help', o ? 'closed' : 'open'); } catch { /* fine */ } return !o; }); };
+  const steps = [
+    ['Booked', 'Your pass appears here straight away, counting down to doors.'],
+    ['Your code lands 48 hours before doors', 'We email you when it does. Holding it back until then stops passes being copied or resold.'],
+    ['Show it at the door', 'Staff scan the code on your phone. Turn your brightness up and you’re in.'],
+  ];
+  return (
+    <section className="card p-5 sm:p-6" aria-labelledby="pass-help">
+      <div className="flex items-center justify-between gap-3">
+        <h2 id="pass-help" className="text-lg font-semibold">How door passes work</h2>
+        <button className="press text-sm font-medium text-muted underline underline-offset-4" onClick={toggle} aria-expanded={open}>{open ? 'Hide' : 'Show'}</button>
+      </div>
+      {open && (
+        <ol className="mt-4 grid gap-4 sm:grid-cols-3">
+          {steps.map(([title, body], k) => (
+            <li key={title} className="flex gap-3">
+              <span className="num-dot" aria-hidden="true">{k + 1}</span>
+              <span><span className="block font-medium text-ink">{title}</span><span className="block text-sm text-muted">{body}</span></span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  );
+}
+
 export default function Wallet() {
   const { session, ready } = useAuth();
   const [params] = useSearchParams();
@@ -110,8 +139,9 @@ export default function Wallet() {
     <div className="ambient space-y-6">
       <div>
         <h1 className="text-3xl font-bold sm:text-4xl">Your door passes</h1>
-        <p className="text-muted">Each pass shows its code 48 hours before doors.</p>
+        <p className="text-muted">Your tickets live here as door passes.</p>
       </div>
+      <PassExplainer />
       {waiting && <Notice>Payment received. We’re issuing your passes for order {paidRef}; this takes a few seconds.</Notice>}
       {q.isPending && <Loader label="Loading your passes" />}
       {q.isError && <div className="card flex items-center justify-between gap-3 p-6"><p className="font-medium">We couldn’t load your passes.</p><button className="btn-secondary !py-2" onClick={() => q.refetch()}>Try again</button></div>}
