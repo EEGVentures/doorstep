@@ -11,7 +11,7 @@ insert into auth.users (id, email, raw_user_meta_data) values
 update public.profiles set role = 'admin' where id = '00000000-0000-0000-0000-0000000000ad';
 
 insert into public.venues (id, slug, name, city, address_line, postcode)
-values ('10000000-0000-0000-0000-000000000001', 'tramshed-cardiff', 'Tramshed', 'Cardiff', 'Clive St, Grangetown', 'CF11 7EN');
+values ('10000000-0000-0000-0000-000000000001', 'tramshed-rules-test', 'Tramshed', 'Cardiff', 'Clive St, Grangetown', 'CF11 7EN');
 
 -- Doors in 3 days (not yet revealed) and an event with doors in 24 hours (revealed).
 insert into public.events (id, slug, venue_id, title, starts_at, doors_at, status) values
@@ -189,7 +189,7 @@ do $$ begin
   assert (select count(*) from public.my_tickets where status = 'valid' and barcode is null) = 1, 'wallet shows ticket without code';
   assert (select count(*) from public.affiliate_link_stats) = 0, 'customers cannot see partner stats';
   assert (select count(*) from public.partner_sales_ledger) = 0, 'customers cannot see the partner ledger';
-  assert (select count(*) from public.event_listings) = 2, 'public listings';
+  assert (select count(*) from public.event_listings) = 3, 'public listings';
 end $$;
 select pg_temp.expect_error($q$ update public.profiles set role = 'admin' where id = auth.uid() $q$, 'permission denied');
 select pg_temp.expect_error($q$ select public.create_reservation(auth.uid(), '30000000-0000-0000-0000-000000000002', 1) $q$, 'permission denied');
@@ -204,14 +204,14 @@ end $$;
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000ad', false);
 do $$ begin
-  assert (select count(*) from public.affiliate_link_stats) = 3, 'admin sees partner stats';
+  assert (select count(*) from public.affiliate_link_stats) = 4, 'admin sees partner stats';
   assert (select count(*) from public.partner_sales_ledger) >= 1, 'admin sees ledger';
 end $$;
 
 reset role;
 set role anon;
 do $$ begin
-  assert (select count(*) from public.event_listings) = 2, 'anon sees listings';
+  assert (select count(*) from public.event_listings) = 3, 'anon sees listings';
 end $$;
 do $$ begin
   assert (select count(*) from public.orders) = 0, 'anon sees no orders';

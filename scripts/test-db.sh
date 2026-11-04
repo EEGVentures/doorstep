@@ -20,6 +20,7 @@ for f in "$ROOT"/supabase/migrations/*.sql; do
   echo "migrate $(basename "$f")"
   $PSQL -f "$f"
 done
+echo "test    supabase/seed.sql"; $PSQL -f "$ROOT/supabase/seed.sql"
 for f in "$ROOT"/tests/db/[1-9]*.sql; do
   echo "test    $(basename "$f")"
   $PSQL -f "$f"

@@ -1,0 +1,43 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import './styles.css';
+import { AuthProvider } from './lib/auth';
+import Layout from './components/Layout';
+import Discover from './pages/Discover';
+import EventPage from './pages/EventPage';
+import PartnerLink from './pages/PartnerLink';
+import Join from './pages/Join';
+import Wallet from './pages/Wallet';
+import Account from './pages/Account';
+import SignIn from './pages/SignIn';
+import Ops from './pages/Ops';
+import Legal from './pages/Legal';
+import { Empty } from './components/ui';
+
+const router = createBrowserRouter([{
+  element: <Layout />,
+  children: [
+    { path: '/', element: <Discover /> },
+    { path: '/events/:slug', element: <EventPage /> },
+    { path: '/go/:code', element: <PartnerLink /> },
+    { path: '/join', element: <Join /> },
+    { path: '/wallet', element: <Wallet /> },
+    { path: '/account', element: <Account /> },
+    { path: '/signin', element: <SignIn /> },
+    { path: '/ops', element: <Ops /> },
+    { path: '/legal/:doc', element: <Legal /> },
+    { path: '*', element: <Empty title="Page not found">That page doesn’t exist.</Empty> },
+  ],
+}]);
+
+const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } });
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={qc}>
+      <AuthProvider><RouterProvider router={router} /></AuthProvider>
+    </QueryClientProvider>
+  </React.StrictMode>,
+);

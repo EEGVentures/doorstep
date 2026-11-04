@@ -1,0 +1,53 @@
+@import url("./loader-frames.css");
+.ds-loader {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 300px;
+}
+.ds-loader--screen {
+  position: fixed;
+  inset: 0;
+  min-height: 100svh;
+  background: #fcfaf8;
+}
+.ds-loader--inline { display: inline-grid; width: auto; min-height: 0; }
+.ds-loader__art {
+  position: relative;
+  display: block;
+  width: 64px;
+  aspect-ratio: 918 / 933;
+}
+.ds-loader--screen .ds-loader__art { width: 80px; }
+.ds-loader--inline .ds-loader__art { width: 32px; }
+.ds-loader__poster { display: block; width: 100%; height: 100%; }
+.ds-loader__sprite {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-size: 1000% 1000%;
+  background-position: 0% 0%;
+  opacity: 0;
+}
+.ds-loader.is-ready .ds-loader__sprite {
+  background-image: url("./loader-atlas.webp");
+  opacity: 1;
+  animation: doorstep-loader-wave 2s steps(1, end) infinite;
+  animation-play-state: paused;
+}
+.ds-loader.is-ready .ds-loader__poster { opacity: 0; }
+.ds-loader.is-ready.is-running .ds-loader__sprite { animation-play-state: running; }
+.ds-loader__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-loader.is-ready .ds-loader__sprite { animation: none; opacity: 0; }
+  .ds-loader.is-ready .ds-loader__poster { opacity: 1; }
+}
