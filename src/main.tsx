@@ -1,6 +1,7 @@
+import { DEMO } from './demo'; // must stay first: patches fetch for the preview build only
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './styles.css';
 import { AuthProvider } from './lib/auth';
@@ -16,8 +17,9 @@ import Ops from './pages/Ops';
 import Legal from './pages/Legal';
 import Press from './pages/Press';
 import { Empty } from './components/ui';
+import { DemoBar } from './components/DemoBar';
 
-const router = createBrowserRouter([{
+const router = (DEMO ? createMemoryRouter : createBrowserRouter)([{
   element: <Layout />,
   children: [
     { path: '/', element: <Discover /> },
@@ -39,7 +41,7 @@ const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, ret
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={qc}>
-      <AuthProvider><RouterProvider router={router} /></AuthProvider>
+      <AuthProvider>{DEMO && <DemoBar />}<RouterProvider router={router} /></AuthProvider>
     </QueryClientProvider>
   </React.StrictMode>,
 );

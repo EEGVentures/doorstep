@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { Session } from '@supabase/supabase-js';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
+import { DEMO, demoSession } from '../demo';
 
 export type Profile = { id: string; email: string; first_name: string | null; last_name: string | null; role: string; marketing_email_consent: boolean };
 
@@ -12,6 +13,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const qc = useQueryClient();
   useEffect(() => {
+    if (DEMO) { setSession(demoSession()); setReady(true); return; }
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true); });
     const { data } = supabase.auth.onAuthStateChange((_e, s) => { setSession(s); qc.invalidateQueries(); });
     return () => data.subscription.unsubscribe();
