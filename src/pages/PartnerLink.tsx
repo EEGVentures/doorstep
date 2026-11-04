@@ -32,9 +32,9 @@ export default function PartnerLink() {
   const { event: ev, valid, partnerName, maxPerOrder } = q.data;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
+    <div className="ambient grid gap-8 lg:grid-cols-[1fr_400px]">
       <div className="space-y-4">
-        {partnerName && <p className="inline-block rounded-full bg-wash px-3 py-1 text-sm font-medium">Offer for {partnerName}</p>}
+        {partnerName && <p className="glass inline-block rounded-full px-4 py-1.5 text-sm font-semibold">Offer for {partnerName}</p>}
         <EventHeader ev={ev} />
       </div>
       <aside className="card h-fit space-y-4 p-6 lg:sticky lg:top-24">

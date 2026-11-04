@@ -7,15 +7,15 @@ export default function Layout() {
   const { pathname } = useLocation();
   // Partner links keep a stripped-back header: no membership prompts on that route.
   const partnerRoute = pathname.startsWith('/go/');
-  const nav = 'rounded-full px-3 py-2 text-sm font-medium text-muted hover:text-ink aria-[current=page]:text-ink aria-[current=page]:bg-wash';
+  const nav = 'rounded-full px-4 py-2 text-sm font-medium text-muted hover:text-ink aria-[current=page]:bg-ink aria-[current=page]:text-white';
   return (
     <div className="min-h-screen flex flex-col">
       {!supabaseConfigured && (
         <div className="bg-ink px-4 py-2 text-center text-xs text-white">Preview build: Supabase keys are not set, so no live data.</div>
       )}
-      <header className="sticky top-0 z-20 border-b border-line bg-canvas/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <Link to="/" aria-label="Doorstep home"><img src="/brand/doorstep-lockup-c-light.png" alt="doorstep" className="h-8 w-auto" /></Link>
+      <header className="sticky top-0 z-20 px-3 pt-3">
+        <div className="glass mx-auto flex max-w-6xl items-center justify-between gap-4 rounded-full py-2 pl-5 pr-2">
+          <Link to="/" aria-label="Doorstep home"><img src="/brand/doorstep-lockup-c-light.png" alt="doorstep" className="h-7 w-auto" /></Link>
           <nav className="flex items-center gap-1">
             {!partnerRoute && <NavLink to="/" end className={nav}>Discover</NavLink>}
             {session && <NavLink to="/wallet" className={nav}>Tickets</NavLink>}

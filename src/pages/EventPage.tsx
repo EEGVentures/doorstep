@@ -23,13 +23,21 @@ export function useEvent(slug: string | undefined) {
 export function EventHeader({ ev }: { ev: any }) {
   const tz = ev.venue.timezone;
   return (
-    <div className="space-y-4">
-      {ev.image_url && <img src={ev.image_url} alt="" className="aspect-[16/9] w-full rounded-card object-cover" />}
-      <p className="eyebrow">{eventDateLong(ev.starts_at, tz)}</p>
-      <h1 className="text-3xl font-bold sm:text-4xl">{ev.title}</h1>
-      <p className="text-muted">{ev.venue.name}, {[ev.venue.address_line, ev.venue.city, ev.venue.postcode].filter(Boolean).join(', ')}</p>
-      <p className="text-sm text-muted">Doors {eventTime(ev.doors_at, tz)} · Starts {eventTime(ev.starts_at, tz)}</p>
-      {ev.description && <div className="whitespace-pre-line pt-2">{ev.description}</div>}
+    <div className="space-y-5">
+      <div className={`tile card aspect-[16/10] sm:aspect-[16/9] ${ev.image_url ? '' : 'tile-wash'}`}>
+        {ev.image_url
+          ? <img src={ev.image_url} alt="" className="tile-bg" />
+          : <img src="/brand/doorstep-emblem-v4-gradient.png" alt="" className="emblem-3d absolute left-1/2 top-[40%] w-1/5 -translate-x-1/2 -translate-y-1/2" />}
+        <div className="glass absolute inset-x-3 bottom-3 rounded-[22px] p-4 sm:inset-x-4 sm:bottom-4 sm:p-5">
+          <p className="eyebrow !text-ink/70">{eventDateLong(ev.starts_at, tz)}</p>
+          <h1 className="text-2xl font-bold leading-tight sm:text-4xl">{ev.title}</h1>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="card p-4"><p className="eyebrow">Where</p><p className="mt-1 font-medium">{ev.venue.name}</p><p className="text-sm text-muted">{[ev.venue.address_line, ev.venue.city, ev.venue.postcode].filter(Boolean).join(', ')}</p></div>
+        <div className="card p-4"><p className="eyebrow">When</p><p className="mt-1 font-medium">Doors {eventTime(ev.doors_at, tz)}</p><p className="text-sm text-muted">Starts {eventTime(ev.starts_at, tz)}</p></div>
+      </div>
+      {ev.description && <div className="card whitespace-pre-line p-5">{ev.description}</div>}
     </div>
   );
 }
@@ -50,7 +58,7 @@ export default function EventPage() {
   const here = `/events/${ev.slug}`;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
+    <div className="ambient grid gap-8 lg:grid-cols-[1fr_380px]">
       <EventHeader ev={ev} />
       <aside className="card h-fit space-y-4 p-6 lg:sticky lg:top-24">
         {params.get('cancelled') && <Notice>Payment cancelled. Your tickets have been released.</Notice>}

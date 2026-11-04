@@ -41,7 +41,7 @@ export default function Wallet() {
   const waiting = params.get('paid') && paidRef && !upcoming.some((t) => t.order_ref === paidRef);
 
   return (
-    <div className="space-y-6">
+    <div className="ambient space-y-6">
       <h1 className="text-3xl font-bold">Your tickets</h1>
       {waiting && <Notice>Payment received. We’re issuing your tickets for order {paidRef}; this takes a few seconds.</Notice>}
       {q.isPending && <Loader label="Loading tickets" />}
@@ -52,17 +52,20 @@ export default function Wallet() {
           const revealed = Boolean(t.barcode);
           return (
             <li key={t.id} className={`card overflow-hidden ${t.status === 'revoked' ? 'opacity-60' : ''}`}>
-              <div className="bg-ink p-5 text-white">
-                <p className="text-xs uppercase tracking-[0.12em] text-white/70">{eventDateLong(t.starts_at, t.timezone)}</p>
-                <h2 className="mt-1 font-display text-xl font-semibold text-white">{t.event_title}</h2>
-                <p className="text-sm text-white/80">{t.venue_name}, {t.venue_city} · Doors {eventTime(t.doors_at, t.timezone)}</p>
+              <div className={`relative h-44 ${t.image_url ? 'bg-ink' : 'tile-wash'}`}>
+                {t.image_url && <img src={t.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+                <div className="glass-dark absolute inset-x-3 bottom-3 rounded-[20px] p-4">
+                  <p className="text-xs uppercase tracking-[0.12em] text-white/80">{eventDateLong(t.starts_at, t.timezone)}</p>
+                  <h2 className="mt-1 font-display text-xl font-semibold text-white">{t.event_title}</h2>
+                  <p className="text-sm text-white/90">{t.venue_name}, {t.venue_city} · Doors {eventTime(t.doors_at, t.timezone)}</p>
+                </div>
               </div>
               <div className="space-y-3 p-5 text-center">
                 {t.status === 'revoked' ? <Notice>This ticket was refunded or cancelled and is no longer valid.</Notice>
                   : revealed ? (<><Qr value={t.barcode!} /><p className="font-mono text-lg tracking-[0.2em]">{t.barcode}</p></>)
                   : (
-                    <div className="rounded-xl bg-wash px-4 py-8">
-                      <img src="/brand/doorstep-emblem-v4-gradient.png" alt="" className="mx-auto mb-3 h-10 w-10" />
+                    <div className="tile-wash rounded-[22px] px-4 py-8">
+                      <img src="/brand/doorstep-emblem-v4-gradient.png" alt="" className="emblem-3d mx-auto mb-3 h-12 w-12" />
                       <p className="font-semibold">Your ticket lands {untilText(t.reveal_at)}</p>
                       <p className="text-sm text-muted">{eventDateLong(t.reveal_at, t.timezone)}, {eventTime(t.reveal_at, t.timezone)}. We’ll email you.</p>
                     </div>

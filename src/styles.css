@@ -7,7 +7,7 @@
 @tailwind utilities;
 
 @layer base {
-  html { background: #FCFAF8; color: #1A1030; -webkit-font-smoothing: antialiased; }
+  html { background: #FCFAF8; color: #1A1030; -webkit-font-smoothing: antialiased; overflow-x: clip; }
   body { @apply font-sans text-[16px] leading-relaxed; }
   h1, h2, h3 { @apply font-display text-ink; }
   :focus-visible { outline: 3px solid #1A1030; outline-offset: 2px; border-radius: 8px; }
@@ -33,10 +33,76 @@
   .btn-primary:not(:disabled):hover .arrow { color: #fff; transform: translateX(4px); }
   @media (prefers-reduced-motion: reduce) { .btn-primary > span, .btn-primary .arrow { transition: none; } }
 
+  .btn-primary { box-shadow: 0 6px 16px -6px rgba(255, 90, 95, 0.45), 0 2px 4px rgba(26, 16, 48, 0.08); }
   .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-ink px-6 py-3 font-semibold text-ink hover:bg-ink hover:text-white disabled:opacity-50; }
+  .chip { @apply rounded-full px-4 py-2 text-sm font-medium text-ink; }
+  .chip[aria-pressed='true'] { @apply bg-ink text-white; box-shadow: 0 6px 14px -6px rgba(26, 16, 48, 0.5); }
   .link { @apply text-ink underline underline-offset-4 decoration-2 decoration-coral hover:decoration-ink; }
-  .card { @apply rounded-card bg-white border border-line shadow-[0_1px_2px_rgba(26,16,48,0.04)]; }
-  .field { @apply w-full rounded-xl border border-muted/40 bg-white px-4 py-3 text-ink placeholder:text-muted/70 focus:border-ink focus:outline-none; }
+  /* Design direction (Nathan, 4 Nov 2026): Liquid Glass, bento squares, soft 3D. Brand palette only, light-first. */
+
+  /* Soft 3D surface: large radius, top highlight, layered soft shadow. The default card. */
+  .card {
+    @apply rounded-[28px] bg-white;
+    border: 1px solid rgba(230, 223, 220, 0.9);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 1),
+      0 1px 2px rgba(26, 16, 48, 0.04),
+      0 8px 24px -8px rgba(26, 16, 48, 0.10),
+      0 24px 48px -24px rgba(26, 16, 48, 0.12);
+  }
+
+  /* Liquid Glass: translucent, blurred, with a bright rim and a soft inner glow.
+     Text on glass is always ink (or white on the dark variant) at full contrast. */
+  .glass {
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.90) 0%, rgba(255, 255, 255, 0.74) 100%);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    backdrop-filter: blur(22px) saturate(170%);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.25),
+      0 10px 30px -10px rgba(26, 16, 48, 0.18);
+  }
+  .glass-dark {
+    background: linear-gradient(160deg, rgba(26, 16, 48, 0.62) 0%, rgba(26, 16, 48, 0.44) 100%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    backdrop-filter: blur(22px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 30px -10px rgba(26, 16, 48, 0.35);
+    color: #fff;
+  }
+  /* Browsers without backdrop blur get a solid surface, so text never sits on a busy photo. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass { background: rgba(255, 255, 255, 0.94); }
+    .glass-dark { background: rgba(26, 16, 48, 0.9); }
+  }
+
+  /* Bento grid: square tiles on a 4-column grid (2 on phones). */
+  .bento { @apply grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4; }
+  .bento > * { aspect-ratio: 4 / 5; min-height: 0; }
+  @media (min-width: 640px) { .bento > * { aspect-ratio: 1 / 1; } }
+  .bento > .tile-wide { @apply col-span-2; aspect-ratio: 2 / 1; }
+  .bento > .tile-big { @apply col-span-2 lg:row-span-2; aspect-ratio: 1 / 1; }
+  .tile { @apply relative block overflow-hidden rounded-[28px]; transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease; }
+  a.tile:hover, a.tile:focus-visible { transform: translateY(-4px) scale(1.01); }
+  .tile > img.tile-bg { @apply absolute inset-0 h-full w-full object-cover; transition: transform .6s cubic-bezier(.2,.8,.2,1); }
+  a.tile:hover > img.tile-bg { transform: scale(1.05); }
+  @media (prefers-reduced-motion: reduce) { .tile, .tile > img.tile-bg { transition: none; } a.tile:hover { transform: none; } a.tile:hover > img.tile-bg { transform: none; } }
+
+  /* Soft 3D placeholder when an event has no image: warm brand wash with a raised emblem. */
+  .tile-wash { background: radial-gradient(120% 90% at 20% 10%, #FFF0EB 0%, #FFE1D6 45%, #FFD2BF 100%); }
+  .emblem-3d { filter: drop-shadow(0 12px 16px rgba(190, 53, 64, 0.25)) drop-shadow(0 2px 3px rgba(26, 16, 48, 0.15)); }
+
+  /* Page ambience: very soft warm light behind glass, kept faint so it never reads as a pink wash. */
+  .ambient { position: relative; isolation: isolate; }
+  .ambient::before {
+    content: ''; position: absolute; inset: -80px 0 auto; height: 520px; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(40% 60% at 15% 30%, rgba(255, 138, 61, 0.14), transparent 70%),
+      radial-gradient(35% 55% at 85% 20%, rgba(255, 90, 95, 0.10), transparent 70%);
+    filter: blur(20px);
+  }
+  .field { @apply w-full rounded-2xl border border-muted/40 bg-white/90 px-4 py-3 text-ink placeholder:text-muted/70 focus:border-ink focus:outline-none; box-shadow: inset 0 1px 2px rgba(26, 16, 48, 0.06); }
   .label { @apply block text-sm font-medium text-ink mb-1; }
   .eyebrow { @apply text-xs font-semibold uppercase tracking-[0.12em] text-muted; }
 }

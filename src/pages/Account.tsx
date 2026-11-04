@@ -32,10 +32,11 @@ export default function Account() {
 
   const ent = status.data?.entitlement;
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="ambient mx-auto max-w-3xl space-y-6">
       <h1 className="text-3xl font-bold">Account</h1>
       {params.get('joined') && !status.data?.active && <Notice>Thanks for joining. We’re confirming your membership with Stripe.</Notice>}
-      <section className="card space-y-3 p-6">
+      <div className="grid gap-4 sm:grid-cols-2">
+      <section className="card space-y-3 p-6 sm:col-span-2">
         <h2 className="text-lg font-semibold">Membership</h2>
         {status.isPending ? <Loader mode="inline" /> : status.data?.active ? (
           <>
@@ -66,8 +67,12 @@ export default function Account() {
           </label>
         </>)}
       </section>
+      <Link to="/wallet" className="tile card tile-wash flex aspect-[2/1] flex-col justify-between p-6 sm:aspect-auto">
+        <img src="/brand/doorstep-emblem-v4-gradient.png" alt="" className="emblem-3d h-10 w-10" />
+        <span className="font-display text-lg font-semibold">Your tickets →</span>
+      </Link>
+      </div>
       <div className="flex flex-wrap gap-3">
-        <Link to="/wallet" className="btn-secondary">Your tickets</Link>
         {profile.data && ['ops', 'admin'].includes(profile.data.role) && <Link to="/ops" className="btn-secondary">Operations</Link>}
         <button className="btn-secondary" onClick={() => supabase.auth.signOut()}>Sign out</button>
       </div>
