@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { supabaseConfigured } from '@/lib/supabase';
@@ -7,14 +8,21 @@ export default function Layout() {
   const { pathname } = useLocation();
   // Partner links keep a stripped-back header: no membership prompts on that route.
   const partnerRoute = pathname.startsWith('/go/');
-  const nav = 'rounded-full px-4 py-2 text-sm font-medium text-muted hover:text-ink aria-[current=page]:bg-ink aria-[current=page]:text-white aria-[current=page]:shadow-[inset_0_1px_0_rgba(255,255,255,0.18),inset_0_-4px_8px_-4px_rgba(0,0,0,0.4),0_6px_14px_-6px_rgba(26,16,48,0.5)]';
+  // Header is clear at the top of the page and turns to glass once content scrolls under it.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 8);
+    on(); window.addEventListener('scroll', on, { passive: true });
+    return () => window.removeEventListener('scroll', on);
+  }, []);
+  const nav = 'press rounded-full px-4 py-2 text-sm font-medium text-muted hover:text-ink aria-[current=page]:bg-ink aria-[current=page]:text-white aria-[current=page]:shadow-[inset_0_1px_0_rgba(255,255,255,0.18),inset_0_-4px_8px_-4px_rgba(0,0,0,0.4),0_6px_14px_-6px_rgba(26,16,48,0.5)]';
   return (
     <div className="min-h-screen flex flex-col">
       {!supabaseConfigured && (
         <div className="bg-ink px-4 py-2 text-center text-xs text-white">Preview build: Supabase keys are not set, so no live data.</div>
       )}
       <header className="sticky top-0 z-20 px-3 pt-3">
-        <div className="glass mx-auto flex max-w-6xl items-center justify-between gap-4 rounded-full py-2 pl-5 pr-2">
+        <div className={`mx-auto flex max-w-6xl items-center justify-between gap-4 rounded-full border py-2 pl-5 pr-2 transition-[background-color,box-shadow,border-color] duration-200 ${scrolled ? 'glass' : 'border-transparent'}`}>
           <Link to="/" aria-label="Doorstep home"><img src="/brand/doorstep-lockup-c-light.png" alt="doorstep" className="h-7 w-auto" /></Link>
           <nav className="flex items-center gap-1">
             {!partnerRoute && <NavLink to="/" end className={nav}>Discover</NavLink>}

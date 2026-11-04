@@ -11,3 +11,17 @@ Applies across the app and all comms. Brand palette and fonts are unchanged; thi
 | Motion | Lifts and image zooms only; all switched off under reduced motion. Loader stays the approved waving emblem. | |
 
 Comms (email, social): same three ideas. Bento squares suit social grids and carousels; glass captions over event photography; soft 3D on filled panels, with flat icons. Email clients do not support blur, so emails use the solid fallback look.
+
+## Critique pass (Impeccable + Emil Kowalski), applied 4 Nov 2026
+
+Nathan approved the critique fixes on 4 Nov 2026. Before and after screenshots are in the project's `briefing/` folder.
+
+- **Motion tokens** in `src/styles.css`: `--ease-out` (0.23, 1, 0.32, 1), `--ease-in-out` (0.77, 0, 0.175, 1), `--ease-drawer` (0.32, 0.72, 0, 1). UI motion stays at or under 350ms. Buttons fill in 250ms, the arrow nudges in 200ms, and press feedback is `scale(0.97)` over 120ms.
+- **Hover only on mouse devices**: tile lift and photo zoom (1.03) sit inside `@media (hover: hover) and (pointer: fine)`.
+- **Glass only on floating layers**: the header (clear at the top, glass once scrolled), the city filter, the date pill, the phone buy bar and sheets. Captions on photos use a dark fade with white text, not a glass slab. Dark glass goes over photos and light glass over the page.
+- **Bento rhythm**: one lead tile, then rows built from one wide tile and two small ones, with at most three wide tiles (`bentoSizes()` in Discover). Desktop rows are sized from the container width, so wide and small tiles line up. Large tiles have a 28px radius and small ones 20px. There's no filler tile. Events without a photo get a typographic tile. Sold out tiles are desaturated and carry a white pill.
+- **Type**: no uppercase eyebrows. The headline uses the coral-to-amber stroke from the emails (`.brand-underline`). Prices and times use tabular numbers.
+- **Discover motion**: an ink pill slides between cities in 200ms. Tiles enter from `scale(0.98)` with a 40ms stagger on first load only, and the grid fades out in 150ms on a filter change. Skeletons load first, and the waving emblem appears only after one second.
+- **Tile to event**: the photo grows into the hero through the View Transitions API (`Link viewTransition` plus a shared `view-transition-name`, 350ms on the drawer curve). The hero caption fades in on top of it.
+- **Phones**: the event page has a sticky glass buy bar that opens a bottom sheet (`BottomSheet.tsx`). The sheet closes on Escape, a backdrop tap, a drag past a quarter of its height, or a flick faster than 0.11px/ms.
+- **Reduced motion** keeps the fades and removes movement, scale and the shared-element morph.

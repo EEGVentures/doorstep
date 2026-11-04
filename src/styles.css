@@ -6,124 +6,172 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Motion tokens (design critique, 4 Nov 2026). Strong ease-out for UI, ease-in-out for things moving on screen,
+   drawer curve for sheets and the tile-to-event photo. Nothing in the UI runs longer than 350ms. */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --press: 120ms;
+}
+
 @layer base {
-  html { background: #FCFAF8; color: #1A1030; -webkit-font-smoothing: antialiased; overflow-x: clip; }
+  html { background: #FCFAF8; color: #1A1030; -webkit-font-smoothing: antialiased; overflow-x: clip; scrollbar-color: rgba(26, 16, 48, 0.28) transparent; }
   body { @apply font-sans text-[16px] leading-relaxed; }
-  h1, h2, h3 { @apply font-display text-ink; }
+  h1, h2, h3 { @apply font-display text-ink; text-wrap: balance; }
+  ::selection { background: rgba(255, 138, 61, 0.28); color: #1A1030; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(26, 16, 48, 0.22); border-radius: 999px; border: 3px solid #FCFAF8; }
   :focus-visible { outline: 3px solid #1A1030; outline-offset: 2px; border-radius: 8px; }
 }
 
 @layer components {
   /* Primary button: the gradient frame pill Nathan chose for the emails on 4 Nov 2026.
-     White pill, 2px coral-to-amber frame, ink text; fills diagonally on hover with white text.
-     (Brand guidelines still say action red here; flagged for a brand update.) */
+     White pill, 2px coral-to-amber frame, ink text; fills diagonally on hover with white text. */
   .btn-primary {
     @apply relative inline-flex items-center justify-center gap-2 rounded-full p-[2px] font-semibold text-ink bg-brand
            disabled:opacity-50 disabled:cursor-not-allowed;
+    box-shadow: 0 6px 16px -6px rgba(255, 90, 95, 0.45), 0 2px 4px rgba(26, 16, 48, 0.08);
+    transition: transform var(--press) var(--ease-out);
   }
   .btn-primary > span {
     @apply inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3;
     background-image: linear-gradient(115deg, #FF5A5F 0%, #FF8A3D 50%, #FFFFFF 50%, #FFFFFF 100%);
     background-size: 250% 100%;
     background-position: 100% 0;
-    transition: background-position .5s ease, color .3s ease;
+    transition: background-position 250ms var(--ease-out), color 200ms var(--ease-out);
   }
-  .btn-primary:not(:disabled):hover > span, .btn-primary:not(:disabled):focus-visible > span { background-position: 0 0; color: #fff; }
-  .btn-primary .arrow { color: #FF5A5F; transition: transform .3s ease, color .3s ease; }
-  .btn-primary:not(:disabled):hover .arrow { color: #fff; transform: translateX(4px); }
-  @media (prefers-reduced-motion: reduce) { .btn-primary > span, .btn-primary .arrow { transition: none; } }
+  .btn-primary .arrow { color: #FF5A5F; transition: transform 200ms var(--ease-out), color 200ms var(--ease-out); }
+  .btn-primary:not(:disabled):focus-visible > span { background-position: 0 0; color: #fff; }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-primary:not(:disabled):hover > span { background-position: 0 0; color: #fff; }
+    .btn-primary:not(:disabled):hover .arrow { color: #fff; transform: translateX(3px); }
+  }
+  .btn-primary:not(:disabled):active, .btn-secondary:not(:disabled):active, .chip:active, .press:active { transform: scale(0.97); }
 
-  .btn-primary { box-shadow: 0 6px 16px -6px rgba(255, 90, 95, 0.45), 0 2px 4px rgba(26, 16, 48, 0.08); }
-  .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-ink px-6 py-3 font-semibold text-ink hover:bg-ink hover:text-white disabled:opacity-50; }
-  .chip { @apply rounded-full px-4 py-2 text-sm font-medium text-ink; }
-  .chip[aria-pressed='true'] { @apply bg-ink text-white; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -4px 8px -4px rgba(0, 0, 0, 0.4), 0 6px 14px -6px rgba(26, 16, 48, 0.5); }
+  .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-ink px-6 py-3 font-semibold text-ink disabled:opacity-50;
+    transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out), transform var(--press) var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) { .btn-secondary:hover { @apply bg-ink text-white; } }
+  .chip { @apply relative z-[1] rounded-full px-4 py-2 text-sm font-medium text-ink; transition: color 200ms var(--ease-in-out), transform var(--press) var(--ease-out); }
+  .chip[aria-pressed='true'] { @apply text-white; }
+  .press { transition: transform var(--press) var(--ease-out); }
   .link { @apply text-ink underline underline-offset-4 decoration-2 decoration-coral hover:decoration-ink; }
-  /* Design direction (Nathan, 4 Nov 2026): Liquid Glass, bento squares, soft 3D. Brand palette only, light-first. */
 
-  /* Soft 3D surface: large radius, top highlight, layered soft shadow. The default card. */
+  /* Headline underline: the coral-to-amber stroke from the emails, drawn under the words rather than a flat underline. */
+  .brand-underline {
+    background-image: linear-gradient(90deg, #FF5A5F, #FF8A3D);
+    background-repeat: no-repeat; background-size: 100% 0.14em; background-position: 0 92%;
+    padding-bottom: 0.04em; -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  }
+
+  /* Cards sit on the canvas: white, soft shadow, hairline edge only where white meets near-white. */
   .card {
     @apply rounded-[28px] bg-white;
-    border: 1px solid rgba(230, 223, 220, 0.9);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 1),
-      0 1px 2px rgba(26, 16, 48, 0.04),
-      0 8px 24px -8px rgba(26, 16, 48, 0.10),
-      0 24px 48px -24px rgba(26, 16, 48, 0.12);
+    border: 1px solid rgba(230, 223, 220, 0.55);
+    box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(26, 16, 48, 0.04), 0 12px 32px -16px rgba(26, 16, 48, 0.14);
   }
 
-  /* Liquid Glass: translucent, blurred, with a bright rim and a soft inner glow.
-     Text on glass is always ink (or white on the dark variant) at full contrast. */
+  /* Liquid Glass is for FLOATING layers only: header once scrolled, city filter, date pill, sticky buy bar, sheets.
+     Light glass over the page, dark glass over photos. Thin bright top rim and one soft shadow. */
   .glass {
-    background: linear-gradient(160deg, rgba(255, 255, 255, 0.90) 0%, rgba(255, 255, 255, 0.74) 100%);
-    -webkit-backdrop-filter: blur(22px) saturate(170%);
-    backdrop-filter: blur(22px) saturate(170%);
-    border: 1px solid rgba(255, 255, 255, 0.75);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.95),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.25),
-      0 10px 30px -10px rgba(26, 16, 48, 0.18);
+    background: rgba(255, 255, 255, 0.72);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 24px -12px rgba(26, 16, 48, 0.22);
   }
   .glass-dark {
-    background: linear-gradient(160deg, rgba(26, 16, 48, 0.62) 0%, rgba(26, 16, 48, 0.44) 100%);
-    -webkit-backdrop-filter: blur(22px) saturate(160%);
-    backdrop-filter: blur(22px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 30px -10px rgba(26, 16, 48, 0.35);
+    background: rgba(26, 16, 48, 0.42);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 6px 18px -10px rgba(0, 0, 0, 0.45);
     color: #fff;
   }
-  /* Browsers without backdrop blur get a solid surface, so text never sits on a busy photo. */
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .glass { background: rgba(255, 255, 255, 0.94); }
-    .glass-dark { background: rgba(26, 16, 48, 0.9); }
+    .glass { background: rgba(255, 255, 255, 0.95); }
+    .glass-dark { background: rgba(26, 16, 48, 0.85); }
   }
 
-  /* Bento grid: square tiles on a 4-column grid (2 on phones). */
-  .bento { @apply grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4; }
+  /* Bento: one lead tile, a few medium (wide) tiles, the rest small. Tighter gap on phones. */
+  .bento { @apply grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4; }
   .bento > * { aspect-ratio: 4 / 5; min-height: 0; }
   @media (min-width: 640px) { .bento > * { aspect-ratio: 1 / 1; } }
-  .bento > .tile-wide { @apply col-span-2; aspect-ratio: 2 / 1; }
-  .bento > .tile-big { @apply col-span-2 lg:row-span-2; aspect-ratio: 1 / 1; }
-  .tile { @apply relative block overflow-hidden rounded-[28px]; transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease; }
-  a.tile:hover, a.tile:focus-visible { transform: translateY(-4px) scale(1.01); }
-  .tile > img.tile-bg { @apply absolute inset-0 h-full w-full object-cover; transition: transform .6s cubic-bezier(.2,.8,.2,1); }
-  a.tile:hover > img.tile-bg { transform: scale(1.05); }
-  @media (prefers-reduced-motion: reduce) { .tile, .tile > img.tile-bg { transition: none; } a.tile:hover { transform: none; } a.tile:hover > img.tile-bg { transform: none; } }
+  .bento > .tile-wide { @apply col-span-2; aspect-ratio: 2 / 1 !important; }
+  .bento > .tile-big { @apply col-span-2 lg:row-span-2; aspect-ratio: 1 / 1 !important; }
+  /* Desktop: square rows sized from the container width, so wide tiles match the small tiles beside them. */
+  .bento-wrap { container-type: inline-size; }
+  @media (min-width: 1024px) {
+    .bento { grid-auto-rows: calc((100cqw - 3 * 1rem) / 4); }
+    .bento > *, .bento > .tile-wide, .bento > .tile-big { aspect-ratio: auto !important; }
+  }
+  .tile { @apply relative block overflow-hidden rounded-[20px] bg-ink;
+    box-shadow: 0 1px 2px rgba(26, 16, 48, 0.06), 0 14px 30px -18px rgba(26, 16, 48, 0.35);
+    transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out); }
+  .tile-big, .tile-hero { @apply rounded-[28px]; }
+  .tile > img.tile-bg { @apply absolute inset-0 h-full w-full object-cover; border-radius: inherit; transition: transform 300ms var(--ease-out), filter 200ms var(--ease-out); }
+  .tile-fade { @apply pointer-events-none absolute inset-x-0 bottom-0 h-[70%];
+    background: linear-gradient(to top, rgba(14, 8, 28, 0.88) 0%, rgba(14, 8, 28, 0.55) 40%, rgba(14, 8, 28, 0) 100%); }
+  a.tile:active { transform: scale(0.97); transition-duration: var(--press); }
+  @media (hover: hover) and (pointer: fine) {
+    a.tile:hover { transform: translateY(-3px); box-shadow: 0 1px 2px rgba(26, 16, 48, 0.06), 0 22px 40px -20px rgba(26, 16, 48, 0.45); }
+    a.tile:hover > img.tile-bg { transform: scale(1.03); }
+  }
+  .tile-soldout > img.tile-bg { filter: grayscale(0.85) brightness(0.8); }
 
-  /* Soft 3D lives on filled sections (tiles, panels, pills), never on icons or the emblem (Nathan, 4 Nov 2026).
-     A filled surface gets a lit top edge, a gently shaded bottom edge and a soft drop shadow, so it looks moulded. */
+  /* Tiles enter from a hair smaller and transparent; never from scale(0). */
+  .tile-in { animation: tile-in 200ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 40ms); }
+  @keyframes tile-in { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: none; } }
+  .grid-leaving { opacity: 0; transition: opacity 150ms ease-in; }
+
+  /* Skeleton with a slow shimmer while listings load. */
+  .skeleton { @apply rounded-[20px]; background: linear-gradient(100deg, #F1ECE9 30%, #F8F5F3 50%, #F1ECE9 70%); background-size: 300% 100%; animation: shimmer 1.8s ease-in-out infinite; }
+  .bento > .skeleton:first-child { @apply rounded-[28px]; }
+  @keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+
+  /* Soft 3D lives on filled sections (tiles, panels, pills), never on icons or the emblem (Nathan, 4 Nov 2026). */
   .surface-3d {
-    box-shadow:
-      inset 0 2px 0 rgba(255, 255, 255, 0.55),
-      inset 0 -10px 24px -12px rgba(26, 16, 48, 0.18),
-      0 14px 28px -14px rgba(26, 16, 48, 0.28),
-      0 2px 4px rgba(26, 16, 48, 0.06);
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), inset 0 -10px 24px -12px rgba(26, 16, 48, 0.18), 0 14px 28px -14px rgba(26, 16, 48, 0.28);
   }
   .tile-wash {
     background: radial-gradient(120% 90% at 20% 10%, #FFF0EB 0%, #FFE1D6 45%, #FFD2BF 100%);
-    box-shadow:
-      inset 0 2px 0 rgba(255, 255, 255, 0.85),
-      inset 0 -14px 28px -14px rgba(190, 53, 64, 0.18),
-      0 14px 28px -14px rgba(190, 53, 64, 0.22),
-      0 2px 4px rgba(26, 16, 48, 0.05);
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.85), inset 0 -14px 28px -14px rgba(190, 53, 64, 0.18), 0 14px 28px -16px rgba(190, 53, 64, 0.25);
   }
   .surface-ink {
     background: radial-gradient(120% 100% at 25% 0%, #2B1F45 0%, #1A1030 60%);
-    box-shadow:
-      inset 0 2px 0 rgba(255, 255, 255, 0.14),
-      inset 0 -14px 28px -14px rgba(0, 0, 0, 0.45),
-      0 16px 30px -14px rgba(26, 16, 48, 0.45);
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.14), inset 0 -14px 28px -14px rgba(0, 0, 0, 0.45), 0 16px 30px -14px rgba(26, 16, 48, 0.45);
   }
 
-  /* Page ambience: very soft warm light behind glass, kept faint so it never reads as a pink wash. */
+  /* Bottom sheet (phones): slides on the drawer curve, dismisses on a downward flick. */
+  .sheet-backdrop { @apply fixed inset-0 z-40 bg-ink/40; transition: opacity 300ms var(--ease-out); }
+  .sheet { @apply fixed inset-x-0 bottom-0 z-50 max-h-[88vh] overflow-y-auto rounded-t-[28px] bg-white px-5 pb-8 pt-3;
+    box-shadow: inset 0 1px 0 #fff, 0 -12px 40px -12px rgba(26, 16, 48, 0.35);
+    transition: transform 400ms var(--ease-drawer); touch-action: pan-x; }
+
   .ambient { position: relative; isolation: isolate; }
   .ambient::before {
     content: ''; position: absolute; inset: -80px 0 auto; height: 520px; z-index: -1; pointer-events: none;
-    background:
-      radial-gradient(40% 60% at 15% 30%, rgba(255, 138, 61, 0.14), transparent 70%),
-      radial-gradient(35% 55% at 85% 20%, rgba(255, 90, 95, 0.10), transparent 70%);
+    background: radial-gradient(40% 60% at 15% 30%, rgba(255, 138, 61, 0.14), transparent 70%), radial-gradient(35% 55% at 85% 20%, rgba(255, 90, 95, 0.10), transparent 70%);
     filter: blur(20px);
   }
   .field { @apply w-full rounded-2xl border border-muted/40 bg-white/90 px-4 py-3 text-ink placeholder:text-muted/70 focus:border-ink focus:outline-none; box-shadow: inset 0 1px 2px rgba(26, 16, 48, 0.06); }
   .label { @apply block text-sm font-medium text-ink mb-1; }
-  .eyebrow { @apply text-xs font-semibold uppercase tracking-[0.12em] text-muted; }
+  /* Small sentence-case label (the old uppercase eyebrow read as template-y). */
+  .eyebrow { @apply text-sm font-medium text-muted; }
+}
+
+/* Shared element: the tile photo grows into the event hero; the hero caption fades in on top of it. */
+.hero-caption { view-transition-name: hero-caption; background: linear-gradient(to top, rgba(14, 8, 28, 0.88) 0%, rgba(14, 8, 28, 0.5) 55%, rgba(14, 8, 28, 0) 100%); }
+::view-transition-new(hero-caption) { animation-delay: 120ms; animation-fill-mode: both; }
+::view-transition-group(*) { animation-duration: 350ms; animation-timing-function: var(--ease-drawer); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 200ms; }
+
+/* Reduced motion: keep the fades, drop movement and scale. */
+@media (prefers-reduced-motion: reduce) {
+  .tile, .tile > img.tile-bg, .btn-primary, .btn-primary .arrow, .chip, .press, .sheet { transition-property: opacity, color, background-color, background-position, filter !important; }
+  a.tile:hover, a.tile:active, .btn-primary:active, .chip:active { transform: none !important; }
+  a.tile:hover > img.tile-bg { transform: none !important; }
+  @keyframes tile-in { from { opacity: 0; } to { opacity: 1; } }
+  .skeleton { animation: none; }
+  ::view-transition-group(*) { animation: none; }
 }
