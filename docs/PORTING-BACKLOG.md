@@ -8,7 +8,7 @@ The Base44 export (Oct 2026) is the reference. Everything below is listed in rou
 | create-checkout, stripe-webhook, refund-order | Rebuilt | Audit bugs fixed: race, 10-min expiry, idempotency, barcode reuse |
 | auto-close-off, generate-export-csv | Rebuilt | Standard CSV, versioned schedule, sold-out events included, direct to recipient |
 | send-reveal-notifications | Rebuilt | `tickets-ready` email scheduled at doors minus 48h |
-| BuildShow (create event) | **To port** | Admin form writing `events` + `ticket_types`; add to `/ops` |
+| BuildShow (create event) | **To port** | Admin form writing `events` + `ticket_types`; see docs/ADMIN-PORTAL.md |
 | BulkUpload | **To port** | CSV/AI-assisted event import |
 | Admin, LiveDashboard, Insights | **To port** | Sales, occupancy and channel charts; read from views |
 | PromoCodeManager, validate-promo-code | **To port** | Needs a pricing decision alongside membership prices |

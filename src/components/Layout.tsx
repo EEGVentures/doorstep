@@ -27,10 +27,11 @@ export default function Layout() {
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
           <p className="font-display font-semibold text-ink">Good nights out, on your Doorstep.</p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <Link className="link" to="/legal/terms">Terms</Link>
             <Link className="link" to="/legal/privacy">Privacy</Link>
             <Link className="link" to="/legal/refunds">Refunds</Link>
+            <Link className="link" to="/press">Press</Link>
             <a className="link" href="mailto:support@doorstep.live">Help</a>
           </div>
         </div>

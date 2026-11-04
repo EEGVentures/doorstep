@@ -11,7 +11,7 @@ The code runs with the defaults shown, so none of these blocks Friday.
 | 5 | Company footer details for emails | Placeholders | `COMPANY_*` env vars |
 | 6 | Affiliate commission | Not calculated; statements carry the figures | `server/partners.ts` |
 | 7 | Barcode format | 12 characters, A–Z and 2–9 without lookalikes, QR | `generate_barcode()` |
-| 8 | Email confirmation at sign-up | Supabase default (confirm email on). Partner visitors must click a link before booking, which is a hurdle. Recommend turning confirmation off and relying on the order email. | Supabase Auth settings |
+| 8 | Email confirmation at sign-up | **Decided 4 Nov: off**, for partner and own traffic alike. Marketing emails should still go only to addresses that have opened or clicked a Doorstep email, since sign-up addresses are not verified. | `supabase/config.toml` |
 | 9 | Tramshed real box-office contact | Test recipient nathan@ernestpromotions.com | `venue_closeoff_settings` |
 | 10 | Google sign-in (Base44 had it) | Email and password only | Supabase Auth providers |
 

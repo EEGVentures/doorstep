@@ -14,6 +14,7 @@ import Account from './pages/Account';
 import SignIn from './pages/SignIn';
 import Ops from './pages/Ops';
 import Legal from './pages/Legal';
+import Press from './pages/Press';
 import { Empty } from './components/ui';
 
 const router = createBrowserRouter([{
@@ -28,6 +29,7 @@ const router = createBrowserRouter([{
     { path: '/signin', element: <SignIn /> },
     { path: '/ops', element: <Ops /> },
     { path: '/legal/:doc', element: <Legal /> },
+    { path: '/press', element: <Press /> },
     { path: '*', element: <Empty title="Page not found">That page doesn’t exist.</Empty> },
   ],
 }]);

@@ -1,0 +1,18 @@
+# Supabase project settings kept in Git. Apply to the hosted project with `supabase config push`
+# (or set the same values in the dashboard under Authentication).
+project_id = "doorstep"
+
+[auth]
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["https://*.vercel.app", "https://doorstep.live"]
+enable_signup = true
+minimum_password_length = 8
+
+[auth.email]
+enable_signup = true
+# Off on purpose (Nathan, 4 Nov 2026). New customers, whether from a partner link or our own
+# marketing, get a session straight away and carry on to booking or joining. No inbox detour.
+# Typos are caught by showing the address before payment; the order email and wallet confirm it.
+enable_confirmations = false
+double_confirm_changes = true
+secure_password_change = true

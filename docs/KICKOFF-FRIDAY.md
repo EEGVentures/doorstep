@@ -19,7 +19,7 @@ Keys go into Vercel's environment variables, not chat, if you prefer. Claude can
 ## 9:00 to 10:30 (Claude, with Nathan on hand)
 
 1. **Push the code.** Push the prepared repo (from `/mnt/project-files/doorstep/build/doorstep-rebuild.bundle`) to the company repo, `main` protected, CI on.
-2. **Database.** `supabase link` to staging, then `supabase db push` runs the three migrations. Run `supabase/seed.sql` for the Tramshed test event and the `BLC-TEST` partner link. Supabase Auth: set Site URL to the Vercel preview URL; decide on email confirmation (docs/DECISIONS.md item 8).
+2. **Database.** `supabase link` to staging, then `supabase db push` runs the three migrations. Run `supabase/seed.sql` for the Tramshed test event and the `BLC-TEST` partner link. Supabase Auth: set Site URL to the Vercel preview URL and switch **Confirm email off** (Authentication → Providers → Email), matching `supabase/config.toml`.
 3. **Vercel.** Import the repo (framework Vite, root `/`). Add every variable from `.env.example` to **Preview** (not Production). Generate `CRON_SECRET` with `openssl rand -hex 24`. Set `EMAIL_SANDBOX_TO` and `CLOSEOFF_TEST_RECIPIENT` to nathan@ernestpromotions.com.
 4. **Stripe.** `MEMBERSHIP_PRICE_PENCE=<test price> SITE_URL=<preview URL> npm run stripe:setup`. It refuses live keys. It creates the membership price, the customer portal and the webhook, and prints the webhook secret for `STRIPE_WEBHOOK_SECRET`. In Stripe Billing settings, set the upcoming-renewal email event to the agreed number of days.
 5. **Smoke test on the preview.**

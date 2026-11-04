@@ -29,6 +29,7 @@ export function AuthForm({ onDone, source = 'signup', cta }: { onDone: () => voi
         });
         if (error) throw error;
         if (!data.session) {
+          // Only happens if email confirmation is switched back on in Supabase (it is off by design).
           setInfo('Check your inbox to confirm your email, then come back to this page.');
           return;
         }
@@ -54,7 +55,11 @@ export function AuthForm({ onDone, source = 'signup', cta }: { onDone: () => voi
           <div><label className="label" htmlFor="last">Last name</label><input id="last" className="field" required autoComplete="family-name" value={last} onChange={(e) => setLast(e.target.value)} /></div>
         </div>
       )}
-      <div><label className="label" htmlFor="email">Email</label><input id="email" type="email" className="field" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+      <div>
+        <label className="label" htmlFor="email">Email</label>
+        <input id="email" type="email" className="field" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        {mode === 'signup' && <p className="mt-1 text-xs text-muted">Your tickets are sent here, so please check it’s right.</p>}
+      </div>
       <div><label className="label" htmlFor="pw">Password</label><input id="pw" type="password" className="field" required minLength={8} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
       {mode === 'signup' && (
         <label className="flex items-start gap-3 text-sm text-muted">
