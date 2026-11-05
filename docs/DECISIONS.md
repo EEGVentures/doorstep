@@ -15,6 +15,17 @@ The code runs with the defaults shown, so none of these blocks Friday.
 | 9 | Tramshed real box-office contact | Test recipient nathan@ernestpromotions.com | `venue_closeoff_settings` |
 | 10 | Google sign-in (Base44 had it) | Email and password only | Supabase Auth providers |
 
+## Email placeholders to fill before launch (agreed 5 Nov 2026)
+
+The twelve service emails are being rebuilt in the new app style with clearly marked placeholders, so the design work doesn't wait on these answers. Each placeholder is a `{{TBC:...}}` token that shows highlighted in previews. A launch check will fail the production build while any token remains.
+
+| Placeholder | Appears in | Needed from |
+| --- | --- | --- |
+| `{{TBC:membership_price}}` | Welcome, membership active, renewal reminder, join prompts | Nathan |
+| `{{TBC:fee_refund_policy}}` | Event cancelled, refund confirmation | Nathan (solicitor review) |
+| `{{TBC:renewal_reminder_days}}` | Renewal reminder, Stripe Billing setting | Nathan |
+| `{{TBC:company_footer}}` | Every email footer (registered name, number, address) | Nathan, once Doorstep Tickets Ltd details are final |
+
 ## Deliberately not carried over from Base44
 
 - **Referral wallet credit:** holding customer credit raises FCA e-money questions (Ken, 3 Nov). Left out until decided.
