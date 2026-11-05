@@ -20,3 +20,13 @@ The Base44 export (Oct 2026) is the reference. Everything below is listed in rou
 | Six more launch emails | **To write** | Confirm email, sign-in/reset, payment failed, membership cancelled, event changed, refund issued |
 | Apple Wallet pass | **To build (Dec)** | Needs Pass Type ID certificate; see docs/08 section 4 |
 | Expo iOS app | **To build (Dec)** | Same API and entitlement |
+
+## SEO build (16 to 27 Nov 2026, about 3 to 4 days)
+
+From the SEO plan (https://claude.ai/artifact/7vvM732C28YKKniu1Wdrno). The app is a Vite single-page app, so search engines and link previews need help:
+
+- Server-filled page heads: a Vercel function (or edge middleware) answers `/events/:slug`, city and venue URLs with the real `<title>`, description, canonical and Open Graph/Twitter preview card tags, then serves the app.
+- schema.org `Event` JSON-LD on event pages (name, startDate, location, offers with price and availability, image).
+- `sitemap.xml` built from on-sale events, cities and venues; `robots.txt` pointing to it.
+- City pages (`/cardiff`) and venue pages (`/venues/tramshed`), server-filled the same way.
+- Partner `/go/*` links stay `noindex` (meta robots and `X-Robots-Tag`), as do `/ops`, `/account`, `/wallet`, `/signin`.
