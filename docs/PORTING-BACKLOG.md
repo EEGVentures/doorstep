@@ -26,7 +26,8 @@ The Base44 export (Oct 2026) is the reference. Everything below is listed in rou
 From the SEO plan (https://claude.ai/artifact/7vvM732C28YKKniu1Wdrno). The app is a Vite single-page app, so search engines and link previews need help:
 
 - Server-filled page heads: a Vercel function (or edge middleware) answers `/events/:slug`, city and venue URLs with the real `<title>`, description, canonical and Open Graph/Twitter preview card tags, then serves the app.
-- schema.org `Event` JSON-LD on event pages (name, startDate, location, offers with price and availability, image).
+- schema.org `Event` JSON-LD on event pages (name, startDate, location, image, offers with availability and url but **no price**).
+- Decision (Nathan, 5 Nov 2026): public pages Google can see never show the member price figure; they say "Members' price" instead. That covers page heads, preview cards, JSON-LD and the logged-out view of Discover and event pages (Google renders the app, so guest tiles and the buy bar must not show "From £x"). Members signed in still see prices.
 - `sitemap.xml` built from on-sale events, cities and venues; `robots.txt` pointing to it.
 - City pages (`/cardiff`) and venue pages (`/venues/tramshed`), server-filled the same way.
 - Partner `/go/*` links stay `noindex` (meta robots and `X-Robots-Tag`), as do `/ops`, `/account`, `/wallet`, `/signin`.
