@@ -37,6 +37,9 @@ function countdown(ms: number) {
  * Door pass: the ticket is a door. Gable top like the emblem, ink panel, a countdown to doors,
  * the code in the letterbox panel once it's released (48h before doors), and the gradient doorstep line underneath.
  */
+/** Nathan's copy rule (5 Nov 2026): wherever "door pass" appears, follow it with this line. */
+export const PASS_LINE = 'Your digital ticket, in the Doorstep app and Apple Wallet.';
+
 function DoorPass({ t }: { t: WalletTicket }) {
   const doors = new Date(t.doors_at).getTime();
   const now = useNow(doors - Date.now() < 86400e3);
@@ -48,8 +51,9 @@ function DoorPass({ t }: { t: WalletTicket }) {
       <article className="door-pass text-white">
         {t.image_url && <img src={t.image_url} alt="" className="door-pass-photo" />}
         <div className="relative flex items-center justify-between px-6 pt-14 text-xs text-white/70">
-          <span className="inline-flex items-center gap-2"><img src="/brand/doorstep-emblem-v4-white.png" alt="" className="h-5 w-5" />Door pass</span>
-          <span className="tabular-nums">{t.order_ref}</span>
+          <span className="inline-flex min-w-0 items-center gap-2"><img src="/brand/doorstep-emblem-v4-white.png" alt="" className="h-5 w-5 shrink-0" />
+            <span className="min-w-0"><span className="block font-medium text-white/85">Door pass</span><span className="block text-[11px] leading-snug text-white/60">{PASS_LINE}</span></span></span>
+          <span className="shrink-0 self-start tabular-nums">{t.order_ref}</span>
         </div>
         <div className="relative space-y-1 px-6 pt-6">
           <p className="text-sm tabular-nums text-white/75">{eventDateLong(t.starts_at, t.timezone)}</p>
@@ -139,7 +143,7 @@ export default function Wallet() {
     <div className="ambient space-y-6">
       <div>
         <h1 className="text-3xl font-bold sm:text-4xl">Your door passes</h1>
-        <p className="text-muted">Your tickets live here as door passes.</p>
+        <p className="text-muted">{PASS_LINE}</p>
       </div>
       <PassExplainer />
       {waiting && <Notice>Payment received. We’re issuing your passes for order {paidRef}; this takes a few seconds.</Notice>}
