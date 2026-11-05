@@ -31,3 +31,12 @@ From the SEO plan (https://claude.ai/artifact/7vvM732C28YKKniu1Wdrno). The app i
 - `sitemap.xml` built from on-sale events, cities and venues; `robots.txt` pointing to it.
 - City pages (`/cardiff`) and venue pages (`/venues/tramshed`), server-filled the same way.
 - Partner `/go/*` links stay `noindex` (meta robots and `X-Robots-Tag`), as do `/ops`, `/account`, `/wallet`, `/signin`.
+
+## iOS membership route (from the Apple fees thread, 5 Nov 2026; recommended, awaiting Nathan's confirmation)
+
+- Plan A: sell membership inside the iOS app through Stripe, like tickets, under App Review guideline 3.1.3(e) (services used outside the app). Member benefits must stay purely real-world (member prices, early access to tickets). Nothing digital behind membership in the app: no members-only content, articles, video or app features.
+- Apple in-app purchase is a fallback only, behind a flag (expo-iap or RevenueCat), in case App Review rejects Plan A. Nathan to enrol in the Small Business Program (15%) just in case.
+- Paywall copy in the app talks about nights out, never app features.
+- UK storefront: the app must not link out to the website to buy membership (US-only allowance).
+- Partner links already bypass membership; no change.
+- App Review notes (submission 23 Jan 2027) explain membership as a members' club for live events.
