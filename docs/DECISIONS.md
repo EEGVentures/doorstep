@@ -21,7 +21,7 @@ The twelve service emails are being rebuilt in the new app style with clearly ma
 
 | Placeholder | Appears in | Needed from |
 | --- | --- | --- |
-| `{{TBC:membership_price}}` | Welcome, membership active, renewal reminder, join prompts | Nathan |
+| ~~`{{TBC:membership_price}}`~~ | Resolved 5 Nov 2026: **£4.99 a month**, sold through Stripe (web and in the iOS app). It is the only route to buying the £5 member tickets. | Nathan (confirmed) |
 | `{{TBC:fee_refund_policy}}` | Event cancelled, refund confirmation | Nathan (solicitor review) |
 | `{{TBC:renewal_reminder_days}}` | Renewal reminder, Stripe Billing setting | Nathan |
 | `{{TBC:company_footer}}` | Every email footer (registered name, number, address) | Nathan, once Doorstep Tickets Ltd details are final |
