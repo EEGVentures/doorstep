@@ -47,7 +47,7 @@ const listings = rows.map(([title, img, venue, category, d, h, flag], i) => {
     id: `e${i}`, slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'), title, image_url: img ? `demo/${img}` : null, category,
     starts_at: at(d, h), doors_at: at(d, h - 1), status: title === 'The Glass Menagerie' ? 'sold_out' : 'on_sale', venue_name: venue, venue_city: v.city,
     timezone: 'Europe/London', from_price_pence: 1410 + i * 100, tickets_left: title === 'The Glass Menagerie' ? 0 : 40, venue_lat: v.lat, venue_lng: v.lng,
-    house_favourite: title === 'Crowd Pleasers Live' || title === 'Blue Note Evenings', flag,
+    flag,
   };
 });
 const eventFor = (slug: string) => {

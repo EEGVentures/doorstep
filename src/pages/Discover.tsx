@@ -11,7 +11,7 @@ import { CityPicker } from '@/components/CityPicker';
 export type Listing = {
   id: string; slug: string; title: string; image_url: string | null; category: string | null; starts_at: string; doors_at: string;
   status: string; venue_name: string; venue_city: string; timezone: string; from_price_pence: number | null; tickets_left: number;
-  venue_lat?: number | null; venue_lng?: number | null; house_favourite?: boolean;
+  venue_lat?: number | null; venue_lng?: number | null;
   /** From event_flag() in the database: 'new' | 'selling_fast' | 'last_few' | null. */
   flag?: string | null; listed_at?: string;
 };
@@ -196,13 +196,12 @@ export default function Discover() {
     setTimeout(() => { choose(c); setLeaving(false); }, 150);
   }
 
-  // Lead with the soonest House favourite (staff pick) in view; otherwise the soonest night with a photo.
-  const favIdx = near.findIndex((x) => x.e.house_favourite && x.e.image_url);
-  const leadIdx = favIdx >= 0 ? favIdx : Math.max(0, near.findIndex((x) => x.e.image_url));
+  // Lead with the soonest night with a photo.
+  const leadIdx = Math.max(0, near.findIndex((x) => x.e.image_url));
   const [lead, ...rest] = near.length ? [near[leadIdx], ...near.filter((_, k) => k !== leadIdx)] : [];
   const firstRow = rest.slice(0, showMember ? 3 : 4);
   const after = rest.slice(firstRow.length);
-  // Everything around the lead is a same-size thumbnail, so the House favourite is the one big moment.
+  // Everything around the lead is a same-size thumbnail, so the lead is the one big moment.
   const sizes: TileSize[] = after.map(() => 'sm');
   let i = 0;
   const delay = (): CSSProperties => ({ ['--i' as string]: stagger.current ? i++ : 0 });
