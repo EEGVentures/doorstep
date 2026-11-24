@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperti
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
-import { useCity } from '@/lib/city';
+import { ALL, useCity } from '@/lib/city';
 import { Empty, Loader } from '@/components/ui';
 import { EventTile, TileSkeleton, type TileSize } from '@/components/EventTile';
 import { CityPicker } from '@/components/CityPicker';
@@ -172,7 +172,7 @@ export default function Discover() {
   const pricesHidden = (q.data ?? []).some((e) => e.from_price_pence == null && e.tickets_left > 0);
 
   const { cities, city, choose, detected } = useCity(q.data);
-  const inView = useMemo(() => (q.data ?? []).filter((e) => e.venue_city === city && inWindow(e.starts_at, when)), [q.data, when, city]);
+  const inView = useMemo(() => (q.data ?? []).filter((e) => (city === ALL || e.venue_city === city) && inWindow(e.starts_at, when)), [q.data, when, city]);
   const counts = useMemo(() => { const m = new Map<string, number>(); for (const e of inView) if (e.category) m.set(e.category, (m.get(e.category) ?? 0) + 1); return m; }, [inView]);
   const activeCat = cat !== 'all' && counts.get(cat) ? cat : 'all'; // a category with nothing on in this city/window falls back to All
   const near = useMemo(() => inView.filter((e) => activeCat === 'all' || e.category === activeCat).map((e) => ({ e })), [inView, activeCat]);
