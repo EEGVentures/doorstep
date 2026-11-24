@@ -13,7 +13,7 @@ on conflict (venue_id) do nothing;
 insert into public.events (id, slug, venue_id, title, description, category, promoter_name, starts_at, doors_at, status)
 values ('b0000000-0000-4000-8000-000000000001', 'test-night-tramshed', 'a0000000-0000-4000-8000-000000000001',
         'Doorstep Test Night', 'A fixture event for testing checkout, the 48-hour reveal and close-off reports. Not a real show.',
-        'Gig', 'Doorstep (test)',
+        'Music', 'Doorstep (test)',
         date_trunc('day', now() at time zone 'Europe/London' + interval '21 days') at time zone 'Europe/London' + interval '20 hours',
         date_trunc('day', now() at time zone 'Europe/London' + interval '21 days') at time zone 'Europe/London' + interval '19 hours',
         'on_sale')

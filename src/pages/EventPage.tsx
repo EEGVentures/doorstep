@@ -8,6 +8,7 @@ import { photoName } from '@/components/EventTile';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Loader, Notice, PrimaryLink } from '@/components/ui';
 import { TicketPicker, type TicketTypeView } from '@/components/TicketPicker';
+import { FlagBanner } from '@/components/FlagBanner';
 
 /**
  * Seeds the event page from the listing the customer just tapped, so the hero (and the shared photo transition)
@@ -16,7 +17,7 @@ import { TicketPicker, type TicketTypeView } from '@/components/TicketPicker';
 function fromListing(qc: ReturnType<typeof useQueryClient>, slug?: string) {
   const l = (qc.getQueryData(['listings']) as any[] | undefined)?.find((x) => x.slug === slug);
   if (!l) return undefined;
-  return { id: l.id, slug: l.slug, title: l.title, description: null, image_url: l.image_url, starts_at: l.starts_at, doors_at: l.doors_at, status: l.status,
+  return { id: l.id, slug: l.slug, title: l.title, description: null, category: l.category, flag: l.flag, image_url: l.image_url, starts_at: l.starts_at, doors_at: l.doors_at, status: l.status,
     venue: { name: l.venue_name, city: l.venue_city, address_line: l.venue_address ?? null, postcode: l.venue_postcode ?? null, timezone: l.timezone, lat: l.venue_lat, lng: l.venue_lng },
     ticket_types: [], placeholder: true };
 }
@@ -34,11 +35,15 @@ export function useEvent(slug: string | undefined) {
     enabled: Boolean(slug),
     placeholderData: () => fromListing(qc, slug),
     queryFn: async () => {
-      const { data, error } = await supabase.from('events')
-        .select(`id, slug, title, description, image_url, starts_at, doors_at, status, venue:venues(name, city, address_line, postcode, timezone, lat, lng), ticket_types(${signedIn ? TT_PRICED : TT_BASE})`)
-        .eq('slug', slug!).maybeSingle();
+      // The flag (New / Selling fast / Last few) is worked out in the database, on the listing view.
+      const [{ data, error }, flag] = await Promise.all([
+        supabase.from('events')
+          .select(`id, slug, title, description, category, image_url, starts_at, doors_at, status, venue:venues(name, city, address_line, postcode, timezone, lat, lng), ticket_types(${signedIn ? TT_PRICED : TT_BASE})`)
+          .eq('slug', slug!).maybeSingle(),
+        supabase.from('event_listings').select('flag').eq('slug', slug!).maybeSingle(),
+      ]);
       if (error) throw error;
-      return data as any;
+      return data ? { ...data, flag: (flag.data as any)?.flag ?? null } as any : null;
     },
   });
 }
@@ -51,7 +56,8 @@ export function EventHeader({ ev }: { ev: any }) {
         {ev.image_url && <img src={ev.image_url} alt="" className="tile-bg" style={{ viewTransitionName: photoName(ev.slug) }} />}
         {/* Caption carries its own fade and transition name, so it settles over the photo as the photo grows into place. */}
         <div className={`absolute inset-x-0 bottom-0 rounded-b-[28px] p-5 sm:p-8 ${ev.image_url ? 'hero-caption pt-24 text-white sm:pt-32' : 'text-ink'}`}>
-          <p className={`text-sm font-medium tabular-nums sm:text-base ${ev.image_url ? 'text-white/80' : 'text-ink/70'}`}>{eventDateLong(ev.starts_at, tz)}</p>
+          {ev.status !== 'sold_out' && ev.flag && <div className="mb-3"><FlagBanner flag={ev.flag} onDark={Boolean(ev.image_url)} size="md" /></div>}
+          <p className={`text-sm font-medium tabular-nums sm:text-base ${ev.image_url ? 'text-white/80' : 'text-ink/70'}`}>{ev.category ? <>{ev.category} · </> : null}{eventDateLong(ev.starts_at, tz)}</p>
           <h1 className={`mt-1 text-3xl font-bold leading-[1.08] sm:text-5xl ${ev.image_url ? '!text-white' : ''}`}>{ev.title}</h1>
           <p className={`mt-1 ${ev.image_url ? 'text-white/80' : 'text-ink/70'}`}>{ev.venue.name}, {ev.venue.city}</p>
         </div>

@@ -12,6 +12,8 @@ export type Listing = {
   id: string; slug: string; title: string; image_url: string | null; category: string | null; starts_at: string; doors_at: string;
   status: string; venue_name: string; venue_city: string; timezone: string; from_price_pence: number | null; tickets_left: number;
   venue_lat?: number | null; venue_lng?: number | null; house_favourite?: boolean;
+  /** From event_flag() in the database: 'new' | 'selling_fast' | 'last_few' | null. */
+  flag?: string | null; listed_at?: string;
 };
 
 /** True once `on` has stayed true for `ms`. The waving loader only appears for waits over a second. */
@@ -101,6 +103,25 @@ type When = 'any' | 'tonight' | 'weekend' | 'week';
 const WHEN: { value: When; label: string }[] = [
   { value: 'any', label: 'Any night' }, { value: 'tonight', label: 'Tonight' }, { value: 'weekend', label: 'This weekend' }, { value: 'week', label: 'This week' },
 ];
+/** Browse categories, in the order they show. Matches the events_category_known check in the database. */
+export const CATEGORIES = ['Theatre', 'Music', 'Comedy', 'Ballet & Opera', 'Classical', 'Jazz & Blues', 'Club nights', 'Quiz & games', 'Family', 'Talks'] as const;
+
+/** Category filter: a quiet scrolling row of pills under the When control. Only categories on in this city show. */
+function CategoryRow({ counts, value, onChange }: { counts: Map<string, number>; value: string; onChange: (v: string) => void }) {
+  const opts = CATEGORIES.filter((c) => counts.get(c));
+  if (opts.length < 2) return null;
+  const all = [...counts.values()].reduce((a, b) => a + b, 0);
+  return (
+    <div className="cat-row -mx-4 px-4 sm:mx-0 sm:px-0" role="group" aria-label="Category">
+      {[['all', 'All', all] as const, ...opts.map((c) => [c, c, counts.get(c)!] as const)].map(([v, label, n]) => (
+        <button key={v} onClick={() => onChange(v)} aria-pressed={value === v} className="cat-chip press">
+          {label}<span className="cat-n">{n}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 const HEADING: Record<When, string> = { any: 'What’s on in', tonight: 'Tonight in', weekend: 'This weekend in', week: 'This week in' };
 
 function inWindow(iso: string, when: When, now = new Date()) {
@@ -132,6 +153,7 @@ function AccountTile({ style, pricesHidden }: { style?: CSSProperties; pricesHid
 
 export default function Discover() {
   const [when, setWhen] = useState<When>('any');
+  const [cat, setCat] = useState('all');
   const [leaving, setLeaving] = useState(false);
   const stagger = useRef(true);
   const grid = useRef<HTMLDivElement>(null);
@@ -150,16 +172,23 @@ export default function Discover() {
   const pricesHidden = (q.data ?? []).some((e) => e.from_price_pence == null && e.tickets_left > 0);
 
   const { cities, city, choose, detected } = useCity(q.data);
-  const near = useMemo(() => (q.data ?? []).filter((e) => e.venue_city === city && inWindow(e.starts_at, when)).map((e) => ({ e })),
-    [q.data, when, city]);
+  const inView = useMemo(() => (q.data ?? []).filter((e) => e.venue_city === city && inWindow(e.starts_at, when)), [q.data, when, city]);
+  const counts = useMemo(() => { const m = new Map<string, number>(); for (const e of inView) if (e.category) m.set(e.category, (m.get(e.category) ?? 0) + 1); return m; }, [inView]);
+  const activeCat = cat !== 'all' && counts.get(cat) ? cat : 'all'; // a category with nothing on in this city/window falls back to All
+  const near = useMemo(() => inView.filter((e) => activeCat === 'all' || e.category === activeCat).map((e) => ({ e })), [inView, activeCat]);
 
   useEffect(() => { if (q.isSuccess) { const t = setTimeout(() => { stagger.current = false; }, 600); return () => clearTimeout(t); } }, [q.isSuccess]);
-  useReveal(grid, [when, city, q.data]);
+  useReveal(grid, [when, city, activeCat, q.data]);
 
   function pick(v: When) {
     if (v === when) return;
     setLeaving(true);
     setTimeout(() => { setWhen(v); setLeaving(false); }, 150);
+  }
+  function pickCat(v: string) {
+    if (v === activeCat) return;
+    setLeaving(true);
+    setTimeout(() => { setCat(v); setLeaving(false); }, 150);
   }
   function pickCity(c: string) {
     if (c === city) return;
@@ -208,16 +237,17 @@ export default function Discover() {
               <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">
                 {HEADING[when]} <CityPicker cities={cities} value={city} onChange={pickCity} detected={detected} />
               </h2>
-              <p className="mt-1 text-sm tabular-nums text-muted">{near.length} night{near.length === 1 ? '' : 's'} out{detected ? ', picked from your connection' : ''}</p>
+              <p className="mt-1 text-sm tabular-nums text-muted">{near.length} night{near.length === 1 ? '' : 's'} out{activeCat !== 'all' ? ` in ${activeCat}` : ''}{detected ? ', picked from your connection' : ''}</p>
             </div>
             <Segmented label="When" options={WHEN} value={when} onChange={pick} />
           </div>
+          <CategoryRow counts={counts} value={activeCat} onChange={pickCat} />
           {near.length === 0 || !lead ? (
             <Empty title={when === 'tonight' ? 'Nothing on tonight, yet' : 'It’s quiet on your doorstep'}>
               New nights out land every week. Try another night, or another city.
             </Empty>
           ) : (
-            <div className="bento-wrap" ref={grid}><div key={when + city} className={`bento ${leaving ? 'grid-leaving' : ''}`}>
+            <div className="bento-wrap" ref={grid}><div key={when + city + activeCat} className={`bento ${leaving ? 'grid-leaving' : ''}`}>
               <EventTile e={lead.e} size="big" className="reveal" style={delay()} />
               {firstRow.map((x) => <EventTile key={x.e.id} e={x.e} className="reveal" style={delay()} />)}
               {showMember && <AccountTile style={delay()} pricesHidden={pricesHidden} />}

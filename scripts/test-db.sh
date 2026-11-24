@@ -29,4 +29,9 @@ if [ -f "$ROOT/tests/db/concurrency.mjs" ]; then
   echo "test    concurrency.mjs"
   DATABASE_URL="postgresql://postgres@localhost/doorstep_test?host=$DATA&port=$PORT" node "$ROOT/tests/db/concurrency.mjs"
 fi
+# The staging sample events must load cleanly against the current schema, and show every flag banner.
+echo "test    supabase/sample-events.sql"
+$PSQL -f "$ROOT/supabase/sample-events.sql" >/dev/null
+[ "$($PSQL -At -c "select string_agg(distinct flag, ',' order by flag) from event_listings where slug like 'sample-%'")" = "last_few,new,selling_fast" ] \
+  || { echo "sample events do not show all three flags"; exit 1; }
 echo "database tests passed"
