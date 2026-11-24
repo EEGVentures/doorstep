@@ -13,10 +13,10 @@ const DB_ERRORS: Record<string, [number, string]> = {
   DS_TICKET_TYPE_NOT_FOUND: [404, 'That ticket is no longer available.'],
   DS_NOT_ON_SALE: [409, 'Tickets for this event are not on sale right now.'],
   DS_SALES_CLOSED: [409, 'Sales for this event have closed.'],
-  DS_MEMBERSHIP_REQUIRED: [402, 'Tickets are for Doorstep members. Join to book.'],
   DS_AFFILIATE_INVALID: [403, 'This link is not valid for this event any more.'],
   DS_TOO_MANY: [400, 'That is more tickets than one order allows.'],
   DS_SOLD_OUT: [409, 'Sorry, there are not enough tickets left.'],
+  DS_HOLD_LIMIT: [429, 'You have tickets on hold for a few nights already. Finish or cancel one of those first.'],
   DS_ORDER_NOT_FOUND: [404, 'Order not found.'],
   DS_REFUND_TOO_LARGE: [400, 'The refund is larger than the amount paid.'],
 };

@@ -37,16 +37,3 @@ export function useProfile() {
   });
 }
 
-/** Whether the signed-in user is a member right now (database decides, including grace periods). */
-export function useMembership() {
-  const { session } = useAuth();
-  return useQuery({
-    queryKey: ['membership', session?.user.id],
-    enabled: Boolean(session),
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('has_active_membership', { p_user: session!.user.id });
-      if (error) throw error;
-      return Boolean(data);
-    },
-  });
-}

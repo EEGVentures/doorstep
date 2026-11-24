@@ -1,6 +1,6 @@
 // POST /api/checkout  { ticketTypeId, quantity, affiliateCode?, visitorId? }
 // Holds stock, then opens a Stripe Checkout page for the exact server-side price.
-// Members buy as normal. A valid partner link buys without a membership and never sees the paywall.
+// Anyone signed in can buy. A valid partner link is recorded on the order for partner reporting.
 import { z } from 'zod';
 import { env } from '../server/env.js';
 import { bodyOf, fromDbError, handler, HttpError } from '../server/http.js';

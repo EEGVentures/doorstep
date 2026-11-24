@@ -1,13 +1,13 @@
-# Open decisions (as of 4 Nov 2026)
+# Open decisions (as of 24 Nov 2026)
 
 The code runs with the defaults shown, so none of these blocks Friday.
 
 | # | Decision | Default in the code | Where to change it |
 | --- | --- | --- | --- |
-| 1 | Monthly membership price (web and iOS) | Any test value when running `stripe:setup` | Stripe Price (lookup key), App Store Connect |
-| 2 | Free first month for new members? | Off (`MEMBERSHIP_TRIAL_DAYS=0`) | Vercel env var |
+| 1 | ~~Monthly membership price~~ | **Withdrawn 24 Nov 2026: no membership or subscription.** | |
+| 2 | Prices shown to guests (signed out)? | Signed-in only | `prices_public()` + column grant, see `docs/BUYING-AND-PARTNERS.md` |
 | 3 | Booking fee refunded when an event is cancelled? | Yes, full refund including fee | `api/ops.ts` `refundOrder()` |
-| 4 | Renewal reminder timing (UK DMCC subscription rules from 2027) | Stripe `invoice.upcoming`, days set in Stripe | Stripe dashboard, Billing settings |
+| 4 | ~~Renewal reminder timing~~ | Withdrawn 24 Nov 2026 (no subscriptions). | |
 | 5 | Company footer details for emails | Placeholders | `COMPANY_*` env vars |
 | 6 | Affiliate commission | Not calculated; statements carry the figures | `server/partners.ts` |
 | 7 | Barcode format | 12 characters, A–Z and 2–9 without lookalikes, QR | `generate_barcode()` |
@@ -17,13 +17,13 @@ The code runs with the defaults shown, so none of these blocks Friday.
 
 ## Email placeholders to fill before launch (agreed 5 Nov 2026)
 
-The twelve service emails are being rebuilt in the new app style with clearly marked placeholders, so the design work doesn't wait on these answers. Each placeholder is a `{{TBC:...}}` token that shows highlighted in previews. A launch check will fail the production build while any token remains.
+The service emails (ten now that the membership-active and renewal-reminder emails are gone) are being rebuilt in the new app style with clearly marked placeholders, so the design work doesn't wait on these answers. Each placeholder is a `{{TBC:...}}` token that shows highlighted in previews. A launch check will fail the production build while any token remains.
 
 | Placeholder | Appears in | Needed from |
 | --- | --- | --- |
-| ~~`{{TBC:membership_price}}`~~ | Resolved 5 Nov 2026: **£4.99 a month**, sold through Stripe (web and in the iOS app). It is the only route to buying the £5 member tickets. | Nathan (confirmed) |
+| ~~`{{TBC:membership_price}}`~~ | Withdrawn 24 Nov 2026: no membership. | |
 | `{{TBC:fee_refund_policy}}` | Event cancelled, refund confirmation | Nathan (solicitor review) |
-| `{{TBC:renewal_reminder_days}}` | Renewal reminder, Stripe Billing setting | Nathan |
+| ~~`{{TBC:renewal_reminder_days}}`~~ | Withdrawn 24 Nov 2026 with the renewal reminder email. | |
 | `{{TBC:company_footer}}` | Every email footer (registered name, number, address) | Nathan, once Doorstep Tickets Ltd details are final |
 
 ## Deliberately not carried over from Base44

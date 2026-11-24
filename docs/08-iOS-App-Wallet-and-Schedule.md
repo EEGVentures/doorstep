@@ -1,5 +1,8 @@
 # 08 — iOS App, Apple Wallet, Approved Decisions and Dated Plan
 
+> **Change 24 Nov 2026 (Nathan):** no paid membership or subscription. Browsing is free, a free account is needed to buy, and the ticket is the only payment. Everything below about membership, Stripe Billing and in-app purchase is withdrawn; ticket payment through Stripe stands. See `docs/BUYING-AND-PARTNERS.md`.
+
+
 Status: approved by Nathan on 4 November 2026 unless marked PROPOSED. Add this file to `docs/`, list it in `docs/00-READING-ORDER.md` after `docs/06`, and treat it as superseding any statement elsewhere in the pack that a native app is out of scope.
 
 ## 1. Decisions now approved

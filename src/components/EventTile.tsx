@@ -84,7 +84,7 @@ export function EventTile({ e, size = 'sm', style, className = '', away }: { e: 
         <span className={`mt-0.5 truncate ${big ? 'text-base' : 'text-xs sm:text-sm'} ${dark ? 'text-white/80' : 'text-ink/70'}`}>{e.venue_name}{away ? <> · <span className="tabular-nums">{away}</span></> : `, ${e.venue_city}`}</span>
         {soldOut
           ? <span className="mt-1.5 w-fit rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-ink">Sold out</span>
-          : <span className={`mt-1 font-semibold tabular-nums ${big ? 'text-base' : 'text-xs sm:text-sm'}`}>From {pounds(e.from_price_pence)}</span>}
+          : <span className={`mt-1 font-semibold tabular-nums ${big ? 'text-base' : 'text-xs sm:text-sm'}`}>{e.from_price_pence == null ? 'Sign in for prices' : `From ${pounds(e.from_price_pence)}`}</span>}
       </span>
     </Link>
   );

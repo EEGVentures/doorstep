@@ -25,15 +25,6 @@ export async function ensureCustomer(user: Profile): Promise<string> {
   return data?.stripe_customer_id ?? customer.id;
 }
 
-let membershipPrice: Stripe.Price | undefined;
-/** The monthly membership price, found by lookup key so the code never hard-codes a price id or amount. */
-export async function getMembershipPrice(): Promise<Stripe.Price> {
-  if (membershipPrice) return membershipPrice;
-  const { data } = await stripe().prices.list({ lookup_keys: [env().STRIPE_MEMBERSHIP_LOOKUP_KEY], active: true, limit: 1 });
-  if (!data[0]) throw new Error(`No active Stripe price with lookup key ${env().STRIPE_MEMBERSHIP_LOOKUP_KEY}. Run npm run stripe:setup.`);
-  membershipPrice = data[0];
-  return membershipPrice;
-}
 
 export function formatPence(pence: number) {
   return `£${(pence / 100).toFixed(2)}`;

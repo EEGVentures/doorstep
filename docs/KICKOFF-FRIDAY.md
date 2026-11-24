@@ -1,6 +1,6 @@
 # Friday 6 November 2026, 9:00 GMT: build kickoff
 
-Goal for the day: the app running on a Vercel **preview** against a Supabase **staging** project, Stripe in **test mode**, Resend sending to Nathan's inbox only. A test member and a test partner-link customer each buy a ticket end to end. Nothing goes to production, no live billing, no venue sends.
+Goal for the day: the app running on a Vercel **preview** against a Supabase **staging** project, Stripe in **test mode**, Resend sending to Nathan's inbox only. A test customer and a test partner-link customer each buy a ticket end to end. Nothing goes to production, no live billing, no venue sends.
 
 ## Before 9:00 (Nathan, about 30 minutes)
 
@@ -21,11 +21,10 @@ Keys go into Vercel's environment variables, not chat, if you prefer. Claude can
 1. **Push the code.** Push the prepared repo (from `/mnt/project-files/doorstep/build/doorstep-rebuild.bundle`) to the company repo, `main` protected, CI on.
 2. **Database.** `supabase link` to staging, then `supabase db push` runs the three migrations. Run `supabase/seed.sql` for the Tramshed test event and the `BLC-TEST` partner link. Supabase Auth: set Site URL to the Vercel preview URL and switch **Confirm email off** (Authentication → Providers → Email), matching `supabase/config.toml`.
 3. **Vercel.** Import the repo (framework Vite, root `/`). Add every variable from `.env.example` to **Preview** (not Production). Generate `CRON_SECRET` with `openssl rand -hex 24`. Set `EMAIL_SANDBOX_TO` and `CLOSEOFF_TEST_RECIPIENT` to nathan@ernestpromotions.com.
-4. **Stripe.** `MEMBERSHIP_PRICE_PENCE=<test price> SITE_URL=<preview URL> npm run stripe:setup`. It refuses live keys. It creates the membership price, the customer portal and the webhook, and prints the webhook secret for `STRIPE_WEBHOOK_SECRET`. In Stripe Billing settings, set the upcoming-renewal email event to the agreed number of days.
+4. **Stripe.** `SITE_URL=<stable test URL> npm run stripe:setup`. It refuses live keys. It creates the ticket-payment webhook and prints the webhook secret for `STRIPE_WEBHOOK_SECRET`. No subscriptions (24 Nov 2026).
 5. **Smoke test on the preview.**
-   - Sign up as a new user. The event page asks you to join. Join with test card `4242 4242 4242 4242`. The account shows Member.
-   - Buy 2 tickets. The wallet shows them as "lands in N days". Order email arrives in Nathan's inbox, marked [preview].
-   - In a private window, open `/go/BLC-TEST`. No membership mention anywhere. Sign up, buy 1 ticket. `/ops` shows 1 visit, 1 sign-up, 1 order for the partner; the statement CSV downloads.
+   - Sign up as a new user and buy 2 tickets with test card `4242 4242 4242 4242`. The wallet shows them as "lands in N days". Order email arrives in Nathan's inbox, marked [preview].
+   - In a private window, open `/go/BLC-TEST`. The Blue Light welcome header shows. Sign up, buy 1 ticket. `/ops` shows 1 visit, 1 sign-up, 1 order for the partner; the statement CSV downloads.
    - Refund one order from the Stripe dashboard. Its tickets turn revoked in the wallet.
    - Make yourself admin: in Supabase SQL editor, `update profiles set role = 'admin' where email = 'nathan@ernestpromotions.com';`
 6. **Close-off rehearsal.** Move the test event's doors to 47 hours from now. The next cron tick emails a `[TEST] Preview v1` CSV to Nathan only.

@@ -24,10 +24,13 @@ insert into public.ticket_types (id, event_id, name, price_pence, fee_pence, fac
   ('c0000000-0000-4000-8000-000000000002', 'b0000000-0000-4000-8000-000000000001', 'Balcony', 1500, 150, 2500, 10, 1)
 on conflict (id) do nothing;
 
--- A test partner and show link: /go/BLC-TEST buys without a membership.
+-- A test partner and show link: /go/BLC-TEST is tracked and greets Blue Light visitors.
 insert into public.partners (id, name, contact_email, status, approved_at)
 values ('d0000000-0000-4000-8000-000000000001', 'Blue Light Card (test)', null, 'approved', now())
 on conflict (id) do nothing;
+update public.partners set welcome_title = 'Thank you to our Blue Light services!',
+  welcome_line = 'Book this night through your Blue Light Card link.'
+ where id = 'd0000000-0000-4000-8000-000000000001' and welcome_title is null;
 insert into public.affiliate_links (id, partner_id, event_id, code)
 values ('e0000000-0000-4000-8000-000000000001', 'd0000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-000000000001', 'BLC-TEST')
 on conflict (id) do nothing;

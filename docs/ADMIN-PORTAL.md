@@ -17,7 +17,7 @@ Doorstep staff only. Not self-service: promoters, venues and partners do not log
 | Partners and links | Approve partners, create show links, download statements, commission when agreed | Built in the API; needs screens |
 | Venue and promoter settlement | What Doorstep owes each venue or promoter per event (allocation cost price × tickets sold, less refunds) | Base44 had `cost_price` on allocations; needs a settlement table and statement |
 | Orders and customer support | Find a customer or order, refund, resend an email, see the issue queue (paid-after-expiry, amount mismatch) | Exceptions already listed on `/ops` |
-| Members | Member count, new, cancelled, churn, monthly recurring revenue, comp memberships | From `membership_entitlements` and Stripe |
+| Customers | Accounts, new sign-ups, buyers, repeat buyers | From `profiles` and `orders` |
 | Emails and communications | Delivery log per customer, failed sends, consented marketing audience export | From `email_outbox`, `consent_events` |
 | Privacy requests | Export or delete a customer's data on request (UK GDPR, one month to respond) | Keep order records needed for accounting |
 | Safety switches | See at a glance whether live payments, venue sending and real emails are on | Read-only display of env settings |
@@ -29,7 +29,6 @@ Doorstep staff only. Not self-service: promoters, venues and partners do not log
 | --- | --- | --- |
 | Revenue, fees, refunds, net, by event, venue, partner and channel | Our database (orders, refunds) | Exact, reconciles with Stripe |
 | Stripe payouts and fees | Stripe API | Reconciliation view |
-| Membership revenue and churn | Stripe Billing + App Store | |
 | Page views, visitors, traffic sources, funnel (view, sign-up, join, checkout, paid) | First-party events table in Supabase, cookieless | No consent banner needed for basic, anonymous counts; works without third-party tools |
 | Trackable links (UTM, partner codes, QR codes on posters) | `affiliate_link_visits` + UTM on orders | Extend to non-partner campaign links |
 | Paid ads and social | GA4 / Google Ads, Meta pixel and Conversions API, Metricool | Only after cookie consent; Google Ads needs event-ticket-seller certification first |

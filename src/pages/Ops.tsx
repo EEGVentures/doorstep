@@ -9,7 +9,7 @@ import { pounds2 } from '@/lib/format';
 import { Loader, Notice } from '@/components/ui';
 
 type Dash = {
-  affiliateLinks: { link_id: string; code: string; partner_id: string; partner_name: string; event_title: string; visits: number; unique_visitors: number; signups: number; paid_orders: number; tickets_sold: number; net_revenue_pence: number; marketing_optins: number; converted_to_members: number }[];
+  affiliateLinks: { link_id: string; code: string; partner_id: string; partner_name: string; event_title: string; visits: number; unique_visitors: number; signups: number; paid_orders: number; tickets_sold: number; net_revenue_pence: number; marketing_optins: number }[];
   orderExceptions: { id: string; ref: string; exception_reason: string; total_pence: number }[];
   closeoffsAwaitingAck: { id: string; version: number; kind: string; delivery_status: string; valid_total: number; event: { title: string; doors_at: string } }[];
 };
@@ -56,7 +56,7 @@ export default function Ops() {
                   <td className="px-3 py-2">{l.partner_name}</td><td className="px-3 py-2">{l.event_title}</td><td className="px-3 py-2 font-mono">{l.code}</td>
                   <td className="px-3 py-2">{l.visits}</td><td className="px-3 py-2">{l.unique_visitors}</td><td className="px-3 py-2">{l.signups}</td>
                   <td className="px-3 py-2">{l.marketing_optins}</td><td className="px-3 py-2">{l.paid_orders}</td><td className="px-3 py-2">{l.tickets_sold}</td>
-                  <td className="px-3 py-2">{pounds2(l.net_revenue_pence)}</td><td className="px-3 py-2">{l.converted_to_members}</td>
+                  <td className="px-3 py-2">{pounds2(l.net_revenue_pence)}</td>
                 </tr>))}</tbody>
             </table>
           </div>

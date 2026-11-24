@@ -1,4 +1,4 @@
-// Last-ticket race: 25 members try to buy from a ticket type with 5 left, all at once,
+// Last-ticket race: 25 customers try to buy from a ticket type with 5 left, all at once,
 // each on its own connection. Exactly 5 holds may succeed.
 import pg from 'pg';
 const url = process.env.DATABASE_URL;
@@ -16,8 +16,6 @@ const users = [];
 for (let i = 0; i < N; i++) {
   const { rows } = await admin.query(`insert into auth.users (email) values ($1) returning id`, [`racer${i}@test.local`]);
   users.push(rows[0].id);
-  await admin.query(`insert into public.membership_entitlements (user_id, source, provider_ref, status, current_period_end)
-    values ($1, 'comp', $2, 'active', now() + interval '30 days')`, [rows[0].id, `race-${i}`]);
 }
 const clients = await Promise.all(users.map(async () => { const c = new pg.Client({ connectionString: url }); await c.connect(); return c; }));
 const results = await Promise.allSettled(clients.map((c, i) =>

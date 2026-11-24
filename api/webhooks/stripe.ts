@@ -1,12 +1,11 @@
 // POST /api/webhooks/stripe
-// The only thing that marks an order paid or changes a web membership. The browser's
+// The only thing that marks an order paid. The browser's
 // success redirect is never trusted. Every event is recorded once and processed idempotently.
 import type Stripe from 'stripe';
 import { env } from '../../server/env.js';
 import { handler, HttpError, rawBody } from '../../server/http.js';
 import { stripe } from '../../server/stripe.js';
 import { db } from '../../server/supabase.js';
-import { queueRenewalReminder, syncStripeSubscription } from '../../server/membership-sync.js';
 import { cancelPendingOrderEmails, queuePaidOrderEmails } from '../../server/orders.js';
 
 export const config = { api: { bodyParser: false } };
@@ -38,15 +37,10 @@ export default handler(['POST'], async (req, res) => {
 });
 
 async function handle(event: Stripe.Event) {
-  const at = new Date(event.created * 1000);
   switch (event.type) {
     case 'checkout.session.completed':
     case 'checkout.session.async_payment_succeeded': {
       const s = event.data.object;
-      if (s.mode === 'subscription' && s.subscription) {
-        await syncStripeSubscription(typeof s.subscription === 'string' ? s.subscription : s.subscription.id, at);
-        return;
-      }
       if (s.mode === 'payment' && s.metadata?.order_id && s.payment_status === 'paid') {
         const pi = typeof s.payment_intent === 'string' ? s.payment_intent : s.payment_intent?.id;
         const { data: order, error } = await db().rpc('fulfil_order', { p_order: s.metadata.order_id, p_payment_intent: pi, p_amount_pence: s.amount_total });
@@ -64,29 +58,13 @@ async function handle(event: Stripe.Event) {
       }
       return;
     }
-    case 'customer.subscription.created':
-    case 'customer.subscription.updated':
-    case 'customer.subscription.deleted':
-    case 'customer.subscription.paused':
-    case 'customer.subscription.resumed':
-      await syncStripeSubscription(event.data.object.id, at);
-      return;
-    case 'invoice.paid':
-    case 'invoice.payment_failed': {
-      const sub = event.data.object.subscription;
-      if (sub) await syncStripeSubscription(typeof sub === 'string' ? sub : sub.id, at);
-      return;
-    }
-    case 'invoice.upcoming':
-      await queueRenewalReminder(event.data.object);
-      return;
     case 'charge.refunded': {
       // Covers refunds made in the Stripe dashboard as well as ones made through the ops API.
       const charge = event.data.object;
       const pi = typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
       if (!pi) return;
       const { data: order } = await db().from('orders').select('id').eq('stripe_payment_intent_id', pi).maybeSingle();
-      if (!order) return; // membership invoice refunds are handled through the subscription events
+      if (!order) return; // not a Doorstep ticket payment
       const refunds = await stripe().refunds.list({ charge: charge.id, limit: 100 });
       for (const r of refunds.data.filter((x) => x.status === 'succeeded')) {
         const { data: updated, error } = await db().rpc('record_refund', {

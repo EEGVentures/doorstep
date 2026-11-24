@@ -11,14 +11,8 @@ const schema = z.object({
 
   STRIPE_SECRET_KEY: z.string().startsWith('sk_'),
   STRIPE_WEBHOOK_SECRET: z.string().startsWith('whsec_'),
-  // Lookup key of the monthly membership Price (created by `npm run stripe:setup`).
-  STRIPE_MEMBERSHIP_LOOKUP_KEY: z.string().default('doorstep_membership_monthly'),
   // Live keys are refused unless this is explicitly "true". Nathan switches this on, nobody else.
   ALLOW_LIVE_PAYMENTS: z.enum(['true', 'false']).default('false'),
-  // Optional free trial for new members, in days (0 = none). Not decided yet.
-  MEMBERSHIP_TRIAL_DAYS: z.coerce.number().int().min(0).max(90).default(0),
-  // Days of continued access while a failed renewal is retried.
-  MEMBERSHIP_GRACE_DAYS: z.coerce.number().int().min(0).max(30).default(7),
 
   RESEND_API_KEY: z.string().startsWith('re_').optional(),
   EMAIL_FROM: z.string().default('Doorstep <tickets@doorsteptickets.com>'),
@@ -36,10 +30,6 @@ const schema = z.object({
 
   CRON_SECRET: z.string().min(16),
 
-  APPLE_BUNDLE_ID: z.string().default('live.doorstep.app'),
-  APPLE_APP_ID: z.coerce.number().optional(),
-  APPLE_ENVIRONMENT: z.enum(['Sandbox', 'Production']).default('Sandbox'),
-  APPLE_MEMBERSHIP_PRODUCT_ID: z.string().default('live.doorstep.membership.monthly'),
 });
 
 export type Env = z.infer<typeof schema>;
