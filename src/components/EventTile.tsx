@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useRef, type CSSProperties, type PointerEvent } from 'react';
 import { eventDate, eventTime, pounds } from '@/lib/format';
 import type { Listing } from '@/pages/Discover';
+import { FlagBanner, FLAG_LABEL, type Flag } from '@/components/FlagBanner';
 
 export type TileSize = 'sm' | 'wide' | 'big' | 'full';
 
@@ -69,7 +70,7 @@ export function EventTile({ e, size = 'sm', style, className = '', away }: { e: 
     <Link to={`/events/${e.slug}`} viewTransition style={style} onClick={doorOpen}
       onPointerMove={big ? drift.onPointerMove : undefined} onPointerLeave={big ? drift.onPointerLeave : undefined}
       className={`tile ${fav ? 'tile-fav' : ''} ${sizeCls} ${photo ? '' : ink ? 'surface-ink' : 'tile-wash'} ${soldOut ? 'tile-soldout' : ''} ${className}`}
-      aria-label={`${fav ? 'House favourite: ' : ''}${e.title}, ${e.venue_name}, ${when}${away ? `, ${away}` : ''}${soldOut ? ', sold out' : ''}`}>
+      aria-label={`${fav ? 'House favourite: ' : ''}${e.flag && !soldOut && e.flag in FLAG_LABEL ? `${FLAG_LABEL[e.flag as Flag]}: ` : ''}${e.title}, ${e.venue_name}, ${when}${away ? `, ${away}` : ''}${soldOut ? ', sold out' : ''}`}>
       {photo && <>
         <img ref={big ? drift.img : undefined} className={`tile-bg ${big ? 'tile-drift' : ''}`} src={e.image_url!} alt="" loading={big ? 'eager' : 'lazy'} style={{ viewTransitionName: photoName(e.slug) }} />
         <span className="tile-fade" />
@@ -78,7 +79,10 @@ export function EventTile({ e, size = 'sm', style, className = '', away }: { e: 
       {fav && <span className="house-label" aria-hidden="true">House favourite</span>}
       <span className={`absolute left-3 top-3 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium tabular-nums ${dark ? 'glass-dark' : 'glass text-ink'}`}>{when}</span>
       <span className={`absolute inset-x-0 bottom-0 flex flex-col ${fav ? 'px-[14%] pb-7 sm:pb-9' : big ? 'p-5 sm:p-7' : 'p-3 sm:p-4'} ${dark ? 'text-white' : 'text-ink'}`}>
-        {e.category && <span className={`text-xs font-medium ${dark ? 'text-white/75' : 'text-ink/60'}`}>{e.category}</span>}
+        {(e.category || (!soldOut && e.flag)) && <span className={`flex items-center gap-2 ${e.flag && !soldOut ? 'mb-1.5' : ''}`}>
+          {!soldOut && <FlagBanner flag={e.flag} onDark={dark} size={big ? 'md' : 'sm'} />}
+          {e.category && <span className={`truncate text-xs font-medium ${dark ? 'text-white/75' : 'text-ink/60'}`}>{e.category}</span>}
+        </span>}
         <span className={`font-display font-semibold leading-tight ${big ? 'text-3xl sm:text-4xl' : photo ? 'line-clamp-2 text-[15px] sm:text-lg' : 'line-clamp-3 text-lg sm:text-2xl'}`}
           style={{ textWrap: 'balance' } as CSSProperties}>{e.title}</span>
         <span className={`mt-0.5 truncate ${big ? 'text-base' : 'text-xs sm:text-sm'} ${dark ? 'text-white/80' : 'text-ink/70'}`}>{e.venue_name}{away ? <> · <span className="tabular-nums">{away}</span></> : `, ${e.venue_city}`}</span>

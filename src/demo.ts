@@ -31,29 +31,29 @@ const venues: Record<string, { city: string; address: string; postcode: string; 
   'The Fleece': { city: 'Bristol', address: '12 St Thomas St', postcode: 'BS1 6JJ', lat: 51.4527, lng: -2.5862 },
   'Thekla': { city: 'Bristol', address: 'The Grove', postcode: 'BS1 4RB', lat: 51.4483, lng: -2.5953 },
 };
-const rows: [string, string | null, string, string, number, number][] = [
-  ['Quiz & Tunes', null, 'The Gate', 'Quiz night', 0, 19],
-  ['Crowd Pleasers Live', 'music.jpg', 'Tramshed', 'Gig', 3, 20],
-  ['Late Laughs Comedy', 'comedy.jpg', 'The Gate', 'Comedy', 4, 20],
-  ['Blue Note Evenings', 'jazz.jpg', 'The Fleece', 'Jazz', 5, 20],
-  ['The Glass Menagerie', 'theatre.jpg', 'The Gate', 'Theatre', 6, 19],
-  ['Neighbourhood Session', null, 'Thekla', 'Gig', 7, 20],
-  ['Friday Floorfillers', 'neighbourhood.jpg', 'Tramshed', 'Club night', 9, 22],
-  ['Open Mic Comedy', 'comedy.jpg', 'The Fleece', 'Comedy', 10, 20],
+const rows: [string, string | null, string, string, number, number, string | null][] = [
+  ['Quiz & Tunes', null, 'The Gate', 'Quiz & games', 0, 19, 'last_few'],
+  ['Crowd Pleasers Live', 'music.jpg', 'Tramshed', 'Music', 3, 20, 'selling_fast'],
+  ['Late Laughs Comedy', 'comedy.jpg', 'The Gate', 'Comedy', 4, 20, 'new'],
+  ['Blue Note Evenings', 'jazz.jpg', 'The Fleece', 'Jazz & Blues', 5, 20, null],
+  ['The Glass Menagerie', 'theatre.jpg', 'The Gate', 'Theatre', 6, 19, null],
+  ['Neighbourhood Session', null, 'Thekla', 'Music', 7, 20, 'new'],
+  ['Friday Floorfillers', 'neighbourhood.jpg', 'Tramshed', 'Club nights', 9, 22, 'selling_fast'],
+  ['Open Mic Comedy', 'comedy.jpg', 'The Fleece', 'Comedy', 10, 20, null],
 ];
-const listings = rows.map(([title, img, venue, category, d, h], i) => {
+const listings = rows.map(([title, img, venue, category, d, h, flag], i) => {
   const v = venues[venue];
   return {
     id: `e${i}`, slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'), title, image_url: img ? `demo/${img}` : null, category,
     starts_at: at(d, h), doors_at: at(d, h - 1), status: title === 'The Glass Menagerie' ? 'sold_out' : 'on_sale', venue_name: venue, venue_city: v.city,
     timezone: 'Europe/London', from_price_pence: 1410 + i * 100, tickets_left: title === 'The Glass Menagerie' ? 0 : 40, venue_lat: v.lat, venue_lng: v.lng,
-    house_favourite: title === 'Crowd Pleasers Live' || title === 'Blue Note Evenings',
+    house_favourite: title === 'Crowd Pleasers Live' || title === 'Blue Note Evenings', flag,
   };
 });
 const eventFor = (slug: string) => {
   const l = listings.find((x) => x.slug === slug) ?? listings[1];
   const i = listings.indexOf(l), v = venues[l.venue_name], sold = l.status === 'sold_out';
-  return { id: l.id, slug: l.slug, title: l.title, image_url: l.image_url, starts_at: l.starts_at, doors_at: l.doors_at, status: l.status,
+  return { id: l.id, slug: l.slug, title: l.title, category: l.category, flag: l.flag, image_url: l.image_url, starts_at: l.starts_at, doors_at: l.doors_at, status: l.status,
     description: `${l.category} at ${l.venue_name}, ${l.venue_city}. This is a sample night for the preview; real listings come from venues.`,
     venue: { name: l.venue_name, city: v.city, address_line: v.address, postcode: v.postcode, timezone: 'Europe/London', lat: v.lat, lng: v.lng },
     ticket_types: [
@@ -86,6 +86,10 @@ if (DEMO) {
   window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url, location.href);
     const p = url.pathname;
+    if (p.includes('/rest/v1/event_listings') && url.searchParams.get('slug')) {
+      const l = listings.find((x) => `eq.${x.slug}` === url.searchParams.get('slug'));
+      return json(l ? [{ flag: l.flag }] : [], 200, 200);
+    }
     if (p.includes('/rest/v1/event_listings')) return json(guestBlind() ? listings.map((l) => ({ ...l, from_price_pence: null })) : listings, 200, 700);
     if (p.includes('/rest/v1/events')) {
       const ev = eventFor(decodeURIComponent((url.searchParams.get('slug') ?? '').replace(/^eq\./, '')));
