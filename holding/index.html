@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Doorstep · Launching February 2027</title>
+  <meta name="description" content="Gigs, comedy and theatre at venues near you, in one easy app. Doorstep opens in February 2027. Sign up for first access.">
+  <link rel="canonical" href="https://doorsteptickets.com/">
+  <meta name="theme-color" content="#FCFAF8">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Doorstep · Launching February 2027">
+  <meta property="og:description" content="Good nights out, on your Doorstep. Sign up for first access.">
+  <meta property="og:url" content="https://doorsteptickets.com/">
+  <meta property="og:image" content="https://doorsteptickets.com/assets/img/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="assets/img/doorstep-icon-v4-192.png">
+  <link rel="preload" href="assets/fonts/Poppins-Bold.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="assets/fonts/Inter-Variable.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#signup">Skip to sign-up</a>
+
+  <header class="top" id="top">
+    <a class="top-logo" href="/" aria-label="Doorstep home">
+      <img src="assets/img/doorstep-lockup-c-light.png" width="160" height="35" alt="Doorstep">
+    </a>
+    <a class="top-link" href="#partners">Promoters and venues</a>
+  </header>
+
+  <main>
+    <!-- Hero: the tagline carries the page; one primary action (the sign-up) -->
+    <section class="hero">
+      <div class="hero-copy">
+        <h1 class="in i0"><span class="line">Good nights out,</span> <span class="line"><span class="u">on your Doorstep.</span></span></h1>
+        <p class="lede in i1">Gigs, comedy and theatre at venues near you, in one easy app. We open in <strong>February&nbsp;2027</strong>. Sign up now and you’ll be first in when accounts open.</p>
+
+        <form class="signup in i2" id="signup" action="/api/signup" method="post" novalidate>
+          <label class="field-label" for="email">Email address</label>
+          <div class="field-row">
+            <input id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" required maxlength="254" placeholder="you@example.com" aria-describedby="form-msg">
+            <button class="btn-primary" type="submit">
+              <span>
+                <img class="btn-ic" src="assets/img/doorstep-emblem-v4-gradient.png" width="22" height="22" alt="">
+                <span class="btn-label">Get first access</span>
+                <svg class="arrow" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+            </button>
+          </div>
+
+          <label class="check">
+            <input type="checkbox" name="marketing" value="yes">
+            <span class="box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="check-text" id="marketing-text">Also send me occasional emails about good nights out near me. I can unsubscribe at any time.</span>
+          </label>
+
+          <!-- Bots fill every field. People never see this one. -->
+          <div class="hp" aria-hidden="true">
+            <label for="website">Leave this empty</label>
+            <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+          </div>
+
+          <p class="fine">We’ll use your email to tell you when Doorstep opens, and only send more if you tick the box. Read our <a href="privacy.html">privacy notice</a>.</p>
+          <p class="form-msg" id="form-msg" role="status" aria-live="polite"></p>
+        </form>
+
+        <div class="done" id="done" hidden tabindex="-1">
+          <img class="done-emblem" src="assets/img/doorstep-emblem-v4-gradient.png" width="44" height="44" alt="">
+          <div>
+            <h2>You’re on the list.</h2>
+            <p>We’ll email you as soon as accounts open in February 2027. See you there.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Small mock-up of the app, drawn in HTML so it stays sharp -->
+      <div class="hero-visual" aria-hidden="true">
+        <div class="phone-wrap">
+          <div class="phone">
+            <div class="screen">
+              <div class="status"><span>9:41</span><span class="island"></span><span class="status-ic"><i></i><i></i><i></i></span></div>
+              <div class="app-head glass-l">
+                <img src="assets/img/doorstep-wordmark-c-ink.png" width="92" height="21" alt="">
+                <span class="app-seg"><b>Discover</b><span>Tickets</span></span>
+              </div>
+              <div class="app-title">What’s on <span class="u">near you</span></div>
+              <div class="app-chips"><b>Any night</b><span>Tonight</span><span>This weekend</span></div>
+              <div class="app-bento">
+                <div class="t t-lead"><img src="assets/img/music.webp" alt=""><span class="t-chip glass-d">Fri · 7:30pm</span><span class="t-fade"></span><span class="t-cap"><em>Live music</em>Ten minutes from home</span></div>
+                <div class="t"><img src="assets/img/comedy.webp" alt=""><span class="t-fade"></span><span class="t-cap"><em>Comedy</em>Sat · 8pm</span></div>
+                <div class="t"><img src="assets/img/jazz.webp" alt=""><span class="t-fade"></span><span class="t-cap"><em>Jazz &amp; soul</em>Sun · 7pm</span></div>
+                <div class="t t-wide"><img src="assets/img/theatre.webp" alt=""><span class="t-fade"></span><span class="t-cap"><em>Theatre</em>Thu · 7:30pm</span></div>
+              </div>
+              <div class="home-bar"></div>
+            </div>
+          </div>
+
+          <div class="launch-pill glass-l">
+            <img src="assets/img/doorstep-emblem-v4-gradient.png" width="26" height="26" alt="">
+            <span><small>Launching</small>Feb 2027</span>
+          </div>
+
+          <div class="stub">
+            <span class="stub-date">Fri 12 Feb</span>
+            <span class="stub-name">Your first night out</span>
+            <span class="stub-row"><span>Door pass</span><span class="stub-admit">Admit 2</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- What's coming: one lead tile, one medium, two small. Never equal squares. -->
+    <section class="coming" aria-labelledby="coming-h">
+      <h2 id="coming-h" class="section-h reveal">Everything for a good night out, in one place.</h2>
+      <div class="bento">
+        <article class="tile tile-lead reveal">
+          <img src="assets/img/neighbourhood.webp" alt="" loading="lazy">
+          <span class="tile-fade"></span>
+          <div class="tile-cap">
+            <h3>Find what’s on near you</h3>
+            <p>From the room round the corner to the theatre in town. Gigs, comedy and theatre, close to home.</p>
+          </div>
+        </article>
+
+        <article class="card card-pass reveal">
+          <div>
+            <h3>Your door pass</h3>
+            <p>Your digital ticket, in the Doorstep app and Apple Wallet. Show it at the door and you’re in.</p>
+          </div>
+          <div class="mini-stub" aria-hidden="true">
+            <span class="stub-date">Sat 13 Feb · 8pm</span>
+            <span class="stub-name">Comedy night</span>
+            <span class="stub-row"><span>Door pass</span><span class="stub-admit">Admit 1</span></span>
+          </div>
+        </article>
+
+        <article class="card card-small reveal">
+          <svg class="ic" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+          <h3>Free to browse</h3>
+          <p>Look around without an account. Sign up when you’re ready to book.</p>
+        </article>
+
+        <article class="card card-framed reveal">
+          <p class="big-date"><span>Feb</span> 2027</p>
+          <h3>Doorstep opens</h3>
+          <p>On the web and as an iPhone app.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Promoters and venues: separate route, separate address -->
+    <section class="partners reveal" id="partners" aria-labelledby="partners-h">
+      <div class="partners-copy">
+        <h2 id="partners-h">Are you an event promoter or venue?</h2>
+        <p>Doorstep is a discreet way to fill a room. Release seats when it suits you, and we’ll report back on every person through the door.</p>
+      </div>
+      <div class="partners-action">
+        <a class="btn-light" href="mailto:partners@doorsteptickets.com?subject=Doorstep%20promoter%20or%20venue%20enquiry">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          partners@doorsteptickets.com
+        </a>
+        <p class="partners-note">Tell us a little about your venue or shows and we’ll be in touch.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <img src="assets/img/doorstep-emblem-v4-gradient.png" width="32" height="32" alt="">
+    <p class="foot-tag">Good nights out, <span class="u">on your Doorstep.</span></p>
+    <nav class="foot-links" aria-label="Footer">
+      <a href="privacy.html">Privacy notice</a>
+      <a href="mailto:partners@doorsteptickets.com">partners@doorsteptickets.com</a>
+    </nav>
+    <p class="foot-copy">© 2026 Doorstep</p>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

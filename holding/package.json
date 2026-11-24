@@ -1,0 +1,7 @@
+{
+  "name": "doorstep-holding",
+  "private": true,
+  "type": "module",
+  "description": "Doorstep pre-launch holding page for doorsteptickets.com. Static page plus one function; no build step.",
+  "engines": { "node": ">=22" }
+}
