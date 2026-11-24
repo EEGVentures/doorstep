@@ -3,7 +3,7 @@ import { renderEmail, SUBJECTS } from '../../server/email/render.js';
 import { TEMPLATES, type TemplateId } from '../../server/email/templates.generated.js';
 
 const brand = {
-  site_url: 'https://doorstep.live', asset_base: 'https://doorstep.live/email-assets', logo_url: 'https://doorstep.live/email-assets/doorstep-lockup-c-light.png',
+  site_url: 'https://doorsteptickets.com', asset_base: 'https://doorsteptickets.com/email-assets', logo_url: 'https://doorsteptickets.com/email-assets/doorstep-lockup-c-light.png',
   company_legal_name: 'Doorstep Ltd', company_number: '00000000', company_address: '1 Test St, Cardiff',
 };
 
@@ -16,7 +16,7 @@ describe('customer email templates', () => {
       const data = Object.fromEntries([...keys].map((k) => [k, k === 'first_name' ? 'Sam <script>' : `v_${k}`]));
       const out = renderEmail(id, data, brand);
       expect(out.html).not.toMatch(/\{\{/);
-      expect(out.html).toContain('https://doorstep.live/email-assets/');
+      expect(out.html).toContain('https://doorsteptickets.com/email-assets/');
       expect(out.html).not.toContain('<script>');
       expect(out.subject).not.toMatch(/\{\{/);
       expect(out.text.length).toBeGreaterThan(100);

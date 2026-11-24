@@ -4,7 +4,7 @@ project_id = "doorstep"
 
 [auth]
 site_url = "http://localhost:5173"
-additional_redirect_urls = ["https://*.vercel.app", "https://doorstep.live"]
+additional_redirect_urls = ["https://*.vercel.app", "https://doorsteptickets.com"]
 enable_signup = true
 minimum_password_length = 8
 

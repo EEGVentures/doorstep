@@ -6,7 +6,7 @@ export default function Legal() {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <h1 className="text-3xl font-bold">{TITLES[doc] ?? 'Not found'}</h1>
-      <p className="text-muted">This page is being finalised and will be published before launch. Questions: <a className="link" href="mailto:support@doorstep.live">support@doorstep.live</a></p>
+      <p className="text-muted">This page is being finalised and will be published before launch. Questions: <a className="link" href="mailto:support@doorsteptickets.com">support@doorsteptickets.com</a></p>
     </div>
   );
 }

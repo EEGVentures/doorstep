@@ -9,7 +9,7 @@ Good nights out, on your Doorstep. Web app and API for Doorstep Tickets, rebuilt
 | Database, auth | Supabase Postgres with row-level security, Supabase Auth (`supabase/migrations/`) |
 | Payments | Stripe Checkout (tickets) and Stripe Billing (web membership). TEST MODE until Nathan approves live. |
 | iOS membership | App Store in-app purchase, same entitlement table (`api/webhooks/apple.ts`) |
-| Email | Resend from `tickets@send.doorstep.live`, templates in `emails/` |
+| Email | Resend from `tickets@doorsteptickets.com` (root domain verified in Resend, eu-west-1), templates in `emails/` |
 
 Start here on Friday: **[docs/KICKOFF-FRIDAY.md](docs/KICKOFF-FRIDAY.md)**.
 

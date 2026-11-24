@@ -21,8 +21,8 @@ const schema = z.object({
   MEMBERSHIP_GRACE_DAYS: z.coerce.number().int().min(0).max(30).default(7),
 
   RESEND_API_KEY: z.string().startsWith('re_').optional(),
-  EMAIL_FROM: z.string().default('Doorstep <tickets@send.doorstep.live>'),
-  EMAIL_REPLY_TO: z.string().default('support@doorstep.live'),
+  EMAIL_FROM: z.string().default('Doorstep <tickets@doorsteptickets.com>'),
+  EMAIL_REPLY_TO: z.string().default('support@doorsteptickets.com'),
   // Outside production, every customer email is redirected here instead.
   EMAIL_SANDBOX_TO: z.string().email().optional(),
   EMAIL_ASSET_BASE: z.string().url().optional(),

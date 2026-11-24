@@ -20,12 +20,12 @@ export default function Press() {
       <section className="card grid gap-6 p-6 sm:grid-cols-2">
         <div>
           <h2 className="text-lg font-semibold">Press contact</h2>
-          <p className="mt-2"><a className="link" href="mailto:press@doorstep.live">press@doorstep.live</a></p>
+          <p className="mt-2"><a className="link" href="mailto:press@doorsteptickets.com">press@doorsteptickets.com</a></p>
           <p className="mt-1 text-sm text-muted">We aim to reply within one working day.</p>
         </div>
         <div>
           <h2 className="text-lg font-semibold">Partnerships</h2>
-          <p className="mt-2"><a className="link" href="mailto:partners@doorstep.live">partners@doorstep.live</a></p>
+          <p className="mt-2"><a className="link" href="mailto:partners@doorsteptickets.com">partners@doorsteptickets.com</a></p>
           <p className="mt-1 text-sm text-muted">Venues, promoters and member organisations.</p>
         </div>
       </section>
