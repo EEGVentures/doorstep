@@ -193,7 +193,7 @@ do $$ begin
 end $$;
 select pg_temp.expect_error($q$ update public.profiles set role = 'admin' where id = auth.uid() $q$, 'permission denied');
 select pg_temp.expect_error($q$ select public.create_reservation(auth.uid(), '30000000-0000-0000-0000-000000000002', 1) $q$, 'permission denied');
-select pg_temp.expect_error($q$ insert into public.membership_entitlements (user_id, source, provider_ref, status) values (auth.uid(), 'comp', 'x', 'active') $q$, 'row-level security');
+select pg_temp.expect_error($q$ insert into public.membership_entitlements (user_id, source, provider_ref, status) values (auth.uid(), 'comp', 'x', 'active') $q$, 'permission denied'); -- no insert grant (stronger than RLS)
 update public.profiles set first_name = 'Mia B' where id = auth.uid();
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', false);
@@ -213,10 +213,9 @@ set role anon;
 do $$ begin
   assert (select count(*) from public.event_listings) = 3, 'anon sees listings';
 end $$;
-do $$ begin
-  assert (select count(*) from public.orders) = 0, 'anon sees no orders';
-  assert (select count(*) from public.ticket_barcodes) = 0, 'anon sees no barcodes';
-  assert (select count(*) from public.profiles) = 0, 'anon sees no profiles';
-end $$;
+-- Guests have no grant at all on private tables (stronger than RLS hiding rows).
+select pg_temp.expect_error($q$ select count(*) from public.orders $q$, 'permission denied');
+select pg_temp.expect_error($q$ select count(*) from public.ticket_barcodes $q$, 'permission denied');
+select pg_temp.expect_error($q$ select count(*) from public.profiles $q$, 'permission denied');
 reset role;
 \echo 'rules ok'

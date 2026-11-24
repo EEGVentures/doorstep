@@ -17,6 +17,6 @@ create or replace function auth.uid() returns uuid language sql stable as $$
 $$;
 grant usage on schema auth, public, extensions to anon, authenticated, service_role;
 grant execute on function auth.uid() to anon, authenticated, service_role;
-alter default privileges in schema public grant select, insert, update, delete on tables to anon, authenticated, service_role;
-alter default privileges in schema public grant usage, select on sequences to anon, authenticated, service_role;
-alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;
+-- Like Supabase projects created from late 2026, no default table, sequence or
+-- function grants for the API roles: the migrations must grant what they need.
+alter default privileges in schema public revoke execute on functions from public;
