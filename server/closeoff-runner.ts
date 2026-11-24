@@ -109,7 +109,7 @@ ${label} for <strong>${a.ev.title}</strong> at ${a.venueName}.</p>
   const filename = `doorstep-closeoff-${a.ev.id.slice(0, 8)}-v${a.version}.csv`;
   const { data, error } = await resend.emails.send(
     {
-      from: e.EMAIL_FROM, to: a.recipients, replyTo: 'partners@doorstep.live',
+      from: e.EMAIL_FROM, to: a.recipients, replyTo: 'partners@doorsteptickets.com',
       subject: `${a.live ? '' : '[TEST] '}${label}: ${a.ev.title}, ${a.picked.validTotal} tickets`,
       html, attachments: [{ filename, content: Buffer.from(a.csv).toString('base64') }],
     },

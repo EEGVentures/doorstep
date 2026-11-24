@@ -14,7 +14,7 @@ export default handler(['GET'], async (req, res) => {
   const end = new Date(new Date(ev.starts_at).getTime() + 3 * 3600_000);
   const body = [
     'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Doorstep//Tickets//EN', 'BEGIN:VEVENT',
-    `UID:${ev.id}@doorstep.live`, `DTSTAMP:${ics(new Date())}`, `DTSTART:${ics(start)}`, `DTEND:${ics(end)}`,
+    `UID:${ev.id}@doorsteptickets.com`, `DTSTAMP:${ics(new Date())}`, `DTSTART:${ics(start)}`, `DTEND:${ics(end)}`,
     `SUMMARY:${esc(ev.title)}`, `LOCATION:${esc([v.name, v.address_line, v.city, v.postcode].filter(Boolean).join(', '))}`,
     `DESCRIPTION:${esc('Your tickets are in your Doorstep wallet from 48 hours before doors.')}`,
     'END:VEVENT', 'END:VCALENDAR',

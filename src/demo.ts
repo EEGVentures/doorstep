@@ -15,7 +15,7 @@ export const setDemoRole = (r: 'guest' | 'member') => { store.set('ds_demo_role'
 export function demoSession(): any {
   if (!DEMO || demoRole() !== 'member') return null;
   return { access_token: 'demo', token_type: 'bearer', expires_in: 3600, refresh_token: 'demo',
-    user: { id: '00000000-0000-4000-8000-000000000001', email: 'preview@doorstep.live', app_metadata: {}, user_metadata: {}, aud: 'authenticated', created_at: '' } };
+    user: { id: '00000000-0000-4000-8000-000000000001', email: 'preview@doorsteptickets.com', app_metadata: {}, user_metadata: {}, aud: 'authenticated', created_at: '' } };
 }
 
 const day = 86400e3;
@@ -87,7 +87,7 @@ if (DEMO) {
     if (p.includes('/rest/v1/rpc/has_active_membership')) return json(demoRole() === 'member');
     if (p.endsWith('/api/geo')) return json({ city: 'Cardiff', country: 'GB', lat: 51.48, lng: -3.18 }, 200, 250);
     if (p.includes('/rest/v1/my_tickets')) return json(demoRole() === 'member' ? myTickets() : []);
-    if (p.includes('/rest/v1/profiles')) return json({ id: demoSession()?.user.id, email: 'preview@doorstep.live', first_name: 'Preview', last_name: 'Member', role: 'customer', marketing_email_consent: true });
+    if (p.includes('/rest/v1/profiles')) return json({ id: demoSession()?.user.id, email: 'preview@doorsteptickets.com', first_name: 'Preview', last_name: 'Member', role: 'customer', marketing_email_consent: true });
     if (p.includes('/rest/v1/')) return json([]);
     if (p.includes('/auth/v1/')) return json({ error: 'demo' }, 400);
     if (p.endsWith('/api/checkout') && store.get('ds_demo_checkout') === '1') {

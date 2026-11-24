@@ -45,7 +45,7 @@ export default function Layout() {
             <Link className="link" to="/legal/privacy">Privacy</Link>
             <Link className="link" to="/legal/refunds">Refunds</Link>
             <Link className="link" to="/press">Press</Link>
-            <a className="link" href="mailto:support@doorstep.live">Help</a>
+            <a className="link" href="mailto:support@doorsteptickets.com">Help</a>
           </div>
         </div>
       </footer>
