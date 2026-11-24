@@ -1,12 +1,13 @@
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { AuthForm } from '@/components/AuthForm';
+import { safeNext } from '@/lib/safeNext';
 
 export default function SignIn() {
   const { session } = useAuth();
   const [params] = useSearchParams();
   const nav = useNavigate();
-  const next = params.get('next')?.startsWith('/') ? params.get('next')! : '/';
+  const next = safeNext(params.get('next'));
   if (session) return <Navigate to={next} replace />;
   return (
     <div className="mx-auto max-w-md space-y-6">

@@ -12,5 +12,5 @@
     "isolatedModules": true,
     "types": ["node"]
   },
-  "include": ["api", "server", "scripts", "tests/unit"]
+  "include": ["api", "server", "scripts", "tests/unit", "src/lib/safeNext.ts"]
 }
