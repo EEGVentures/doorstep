@@ -1,6 +1,6 @@
 // POST /api/signup: stores a "first access" sign-up in Supabase (public.launch_signups).
 // Env (Vercel project for the holding page): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (server only, never VITE_),
-// optional HOLDING_IP_SALT. Bot protection: same-origin check, hidden honeypot field, minimum fill time,
+// optional HOLDING_IP_SALT. HOLDING_PREVIEW=1 turns storage off for a demo copy. Bot protection: same-origin check, hidden honeypot field, minimum fill time,
 // and a per-IP hourly limit enforced in the database. Never logs email addresses.
 import { createHash } from 'node:crypto';
 
@@ -56,6 +56,9 @@ export default async function handler(req, res) {
   const consentText = marketing && typeof body.consent_text === 'string' ? body.consent_text.slice(0, 500) : null;
   if (marketing && !consentText) return send(res, 400, { error: 'bad_request' });
   const source = typeof body.source === 'string' ? body.source.replace(/[^\w.-]/g, '').slice(0, 64) || null : null;
+
+  // Preview projects (e.g. preview.doorsteptickets.com for colleagues) accept the form without storing anything.
+  if (process.env.HOLDING_PREVIEW === '1') return send(res, 200, { ok: true, preview: true });
 
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
