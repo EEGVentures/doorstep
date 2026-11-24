@@ -1,4 +1,4 @@
-// Partner show links (e.g. Blue Light Card, Tickets for Good). Public, no sign-in, no paywall.
+// Partner show links (e.g. Blue Light Card, Tickets for Good). Public, no sign-in needed to view.
 // GET  /api/affiliate?code=XYZ   -> the event and its tickets for that link
 // POST /api/affiliate { code, visitorId, utm_*, referrer }  -> records a visit for partner reporting
 import { z } from 'zod';
@@ -9,7 +9,7 @@ const Code = z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{4,40}$/);
 
 async function resolve(code: string) {
   const { data } = await db().from('affiliate_links')
-    .select('id, code, status, max_per_order, expires_at, event_id, partner:partners(name, status)')
+    .select('id, code, status, max_per_order, expires_at, event_id, partner:partners(name, status, welcome_title, welcome_line)')
     .eq('code', code).maybeSingle();
   return data;
 }
@@ -26,11 +26,13 @@ export default handler(['GET', 'POST'], async (req) => {
       .select('id, slug, title, description, image_url, starts_at, doors_at, status, venue:venues(name, city, address_line, postcode, timezone), ticket_types(id, name, price_pence, fee_pence, face_value_pence, capacity, sold, held, max_per_order, active, sort_order)')
       .eq('id', link.event_id).single();
     if (!ev) throw new HttpError(404, 'LINK_NOT_FOUND', 'This link is not valid.');
-    const partner = link.partner as unknown as { name: string };
+    const partner = link.partner as unknown as { name: string; welcome_title: string | null; welcome_line: string | null };
     return {
       code: link.code,
       valid: Boolean(valid?.id),
       partnerName: partner?.name ?? null,
+      welcomeTitle: partner?.welcome_title ?? null,
+      welcomeLine: partner?.welcome_line ?? null,
       maxPerOrder: link.max_per_order,
       event: {
         ...ev,

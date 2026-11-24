@@ -3,10 +3,8 @@ import { TEMPLATES, type TemplateId } from './templates.generated.js';
 // Subject lines signed off on 4 Nov 2026 (see the customer email journey PDF).
 export const SUBJECTS: Record<TemplateId, string> = {
   'welcome': 'Welcome to Doorstep, {{first_name}}',
-  'membership-active': 'You’re in, {{first_name}}',
   'order-confirmed': 'You’re going to {{event_name}}',
   'tickets-ready': 'Your tickets for {{event_name}} have landed',
-  'renewal-reminder': 'Your Doorstep membership renews on {{renewal_date_short}}',
   'event-cancelled': 'You’ve been refunded: {{event_name}} is cancelled',
 };
 

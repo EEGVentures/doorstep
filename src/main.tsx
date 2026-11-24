@@ -1,7 +1,7 @@
 import { DEMO } from './demo'; // must stay first: patches fetch for the preview build only
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { createBrowserRouter, createMemoryRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, createMemoryRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './styles.css';
 import { AuthProvider } from './lib/auth';
@@ -9,7 +9,6 @@ import Layout from './components/Layout';
 import Discover from './pages/Discover';
 import EventPage from './pages/EventPage';
 import PartnerLink from './pages/PartnerLink';
-import Join from './pages/Join';
 import Wallet from './pages/Wallet';
 import Account from './pages/Account';
 import SignIn from './pages/SignIn';
@@ -25,7 +24,7 @@ const routes = [{
     { path: '/', element: <Discover /> },
     { path: '/events/:slug', element: <EventPage /> },
     { path: '/go/:code', element: <PartnerLink /> },
-    { path: '/join', element: <Join /> },
+    { path: '/join', element: <Navigate to="/" replace /> },
     { path: '/wallet', element: <Wallet /> },
     { path: '/account', element: <Account /> },
     { path: '/signin', element: <SignIn /> },

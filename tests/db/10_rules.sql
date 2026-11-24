@@ -24,9 +24,6 @@ insert into public.ticket_types (id, event_id, name, price_pence, fee_pence, cap
   ('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'General admission', 1260, 150, 3),
   ('30000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000002', 'General admission', 1000, 100, 10);
 
-insert into public.membership_entitlements (user_id, source, provider_ref, status, current_period_end)
-values ('00000000-0000-0000-0000-00000000000a', 'stripe', 'sub_test_1', 'active', now() + interval '20 days');
-
 insert into public.partners (id, name, status, approved_at) values
   ('40000000-0000-0000-0000-000000000001', 'Blue Light Test Partner', 'approved', now()),
   ('40000000-0000-0000-0000-000000000002', 'Unapproved Partner', 'pending', null);
@@ -57,10 +54,17 @@ do $$ begin
   assert (select first_name from public.profiles where email = 'member@test.local') = 'Mia', 'name copied';
 end $$;
 
--- 2. Membership gate ------------------------------------------------------
-select pg_temp.expect_error($q$ select public.create_reservation('00000000-0000-0000-0000-00000000000c', '30000000-0000-0000-0000-000000000001', 1) $q$, 'DS_MEMBERSHIP_REQUIRED');
+-- 2. No membership gate (Nathan, 24 Nov 2026): any signed-in customer buys 'direct' --------
+do $$
+declare o public.orders;
+begin
+  o := public.create_reservation('00000000-0000-0000-0000-00000000000c', '30000000-0000-0000-0000-000000000001', 1);
+  assert o.route = 'direct', 'direct route for a customer without a partner link';
+  assert o.affiliate_link_id is null, 'no link on a direct order';
+  perform public.release_reservation(o.reservation_id, 'cancelled');
+end $$;
 
--- 3. Affiliate link bypasses the gate; unapproved partner or wrong event does not
+-- 3. Partner link is tracked on the order; unapproved partner or wrong event is refused
 select pg_temp.expect_error($q$ select public.create_reservation('00000000-0000-0000-0000-00000000000c', '30000000-0000-0000-0000-000000000001', 1, 'PENDING-PARTNER') $q$, 'DS_AFFILIATE_INVALID');
 select pg_temp.expect_error($q$ select public.create_reservation('00000000-0000-0000-0000-00000000000c', '30000000-0000-0000-0000-000000000001', 1, 'BLUELIGHT-SOON') $q$, 'DS_AFFILIATE_INVALID');
 do $$
@@ -85,6 +89,21 @@ begin
   assert (select held from public.ticket_types where id = '30000000-0000-0000-0000-000000000001') = 2, 'held 2';
 end $$;
 select pg_temp.expect_error($q$ select public.create_reservation('00000000-0000-0000-0000-00000000000b', '30000000-0000-0000-0000-000000000001', 2, 'BLUELIGHT-LATER') $q$, 'DS_SOLD_OUT');
+
+-- 5b. Holds: a new hold on the same event replaces the old one; at most 3 events held at once per account
+do $$
+declare o1 public.orders; o2 public.orders;
+begin
+  o1 := public.create_reservation('00000000-0000-0000-0000-00000000000c', '30000000-0000-0000-0000-000000000002', 1);
+  o2 := public.create_reservation('00000000-0000-0000-0000-00000000000c', '30000000-0000-0000-0000-000000000002', 2);
+  assert (select status from public.reservations where id = o1.reservation_id) <> 'active', 'earlier hold on the same event released';
+  assert (select count(*) from public.reservations where user_id = '00000000-0000-0000-0000-00000000000c' and status = 'active') = 1, 'one hold per event';
+  insert into public.reservations (user_id, ticket_type_id, quantity, route, expires_at)
+    select '00000000-0000-0000-0000-00000000000c', '30000000-0000-0000-0000-000000000001', 1, 'direct', now() + interval '30 minutes' from generate_series(1, 3);
+end $$;
+select pg_temp.expect_error($q$ select public.create_reservation('00000000-0000-0000-0000-00000000000c', '30000000-0000-0000-0000-000000000002', 1) $q$, 'DS_HOLD_LIMIT');
+update public.reservations set status = 'cancelled' where user_id = '00000000-0000-0000-0000-00000000000c' and status = 'active' and ticket_type_id = '30000000-0000-0000-0000-000000000001';
+select public.release_reservation(id, 'cancelled') from public.reservations where user_id = '00000000-0000-0000-0000-00000000000c' and status = 'active';
 
 -- 6. Fulfilment issues random unique barcodes, is idempotent and checks the amount
 do $$
@@ -144,17 +163,10 @@ end $$;
 select pg_temp.expect_error($q$ delete from public.ticket_barcodes $q$, 'immutable');
 select pg_temp.expect_error($q$ update public.ticket_barcodes set barcode = 'AAAAAAAAAAAA' $q$, 'immutable');
 
--- 9. Membership states
+-- 9. Membership storage is gone
 do $$ begin
-  insert into public.membership_entitlements (user_id, source, provider_ref, status, current_period_end, grace_until) values
-    ('00000000-0000-0000-0000-00000000000c', 'stripe', 'sub_lapsed', 'past_due', now() - interval '1 day', now() + interval '3 days');
-  assert public.has_active_membership('00000000-0000-0000-0000-00000000000c'), 'past_due inside grace keeps access';
-  update public.membership_entitlements set grace_until = now() - interval '1 minute' where provider_ref = 'sub_lapsed';
-  assert not public.has_active_membership('00000000-0000-0000-0000-00000000000c'), 'grace over means no access';
-  update public.membership_entitlements set status = 'canceled', current_period_end = now() + interval '5 days' where provider_ref = 'sub_lapsed';
-  assert public.has_active_membership('00000000-0000-0000-0000-00000000000c'), 'cancelled keeps access until period end';
-  update public.membership_entitlements set status = 'expired' where provider_ref = 'sub_lapsed';
-  assert not public.has_active_membership('00000000-0000-0000-0000-00000000000c'), 'expired has no access';
+  assert to_regclass('public.membership_entitlements') is null, 'no membership table';
+  assert to_regprocedure('public.has_active_membership(uuid)') is null, 'no membership check';
 end $$;
 
 -- 10. Partner reporting and attribution
@@ -193,7 +205,6 @@ do $$ begin
 end $$;
 select pg_temp.expect_error($q$ update public.profiles set role = 'admin' where id = auth.uid() $q$, 'permission denied');
 select pg_temp.expect_error($q$ select public.create_reservation(auth.uid(), '30000000-0000-0000-0000-000000000002', 1) $q$, 'permission denied');
-select pg_temp.expect_error($q$ insert into public.membership_entitlements (user_id, source, provider_ref, status) values (auth.uid(), 'comp', 'x', 'active') $q$, 'permission denied'); -- no insert grant (stronger than RLS)
 update public.profiles set first_name = 'Mia B' where id = auth.uid();
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', false);

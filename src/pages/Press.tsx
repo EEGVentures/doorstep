@@ -33,7 +33,7 @@ export default function Press() {
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold">About Doorstep</h2>
         <div className="card space-y-3 p-6">
-          <p>Doorstep helps people find good nights out at venues near them. Members book gigs, comedy, theatre and more, and their tickets arrive in their Doorstep wallet ahead of the night.</p>
+          <p>Doorstep helps people find good nights out at venues near them. It’s free to browse, and anyone with a free account can book gigs, comedy, theatre and more. Tickets arrive in their Doorstep wallet ahead of the night.</p>
           <p>Doorstep works with venues and promoters to bring local audiences into their events, and with member organisations to offer their communities a route to live events close to home.</p>
           <p className="font-display font-semibold">Good nights out, on your Doorstep.</p>
           <button className="btn-secondary text-sm" onClick={(e) => {

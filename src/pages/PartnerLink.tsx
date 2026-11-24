@@ -1,6 +1,6 @@
 // Partner show links (/go/CODE), e.g. from Blue Light Card or Tickets for Good.
-// Nathan, 4 Nov 2026: these must never show the membership paywall. The visitor signs up
-// (so we capture them, with consent), books and pays. Membership is offered later, never here.
+// Each partner gets its own welcome header (Nathan, 5 Nov 2026). The visitor signs up with a free
+// account (so we capture them, with consent), books and pays. No upsell before purchase.
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -11,7 +11,7 @@ import { AuthForm } from '@/components/AuthForm';
 import { EventHeader, toView } from './EventPage';
 import { TicketPicker } from '@/components/TicketPicker';
 
-type LinkData = { code: string; valid: boolean; partnerName: string | null; maxPerOrder: number; event: any };
+type LinkData = { code: string; valid: boolean; partnerName: string | null; welcomeTitle: string | null; welcomeLine: string | null; maxPerOrder: number; event: any };
 
 export default function PartnerLink() {
   const { code = '' } = useParams();
@@ -29,12 +29,17 @@ export default function PartnerLink() {
 
   if (q.isPending) return <Loader label="Loading your offer" />;
   if (q.isError || !q.data) return <Notice tone="error">This link isn’t valid. Please check it with the organisation that sent it.</Notice>;
-  const { event: ev, valid, partnerName, maxPerOrder } = q.data;
+  const { event: ev, valid, partnerName, welcomeTitle, welcomeLine, maxPerOrder } = q.data;
 
   return (
     <div className="ambient grid gap-8 lg:grid-cols-[1fr_400px]">
       <div className="space-y-4">
-        {partnerName && <p className="glass inline-block rounded-full px-4 py-1.5 text-sm font-semibold">Offer for {partnerName}</p>}
+        {welcomeTitle ? (
+          <div className="glass rounded-[28px] px-5 py-4 sm:px-6">
+            <p className="font-display text-xl font-semibold leading-snug sm:text-2xl">{welcomeTitle}</p>
+            {welcomeLine && <p className="mt-1 text-muted">{welcomeLine}</p>}
+          </div>
+        ) : partnerName && <p className="glass inline-block rounded-full px-4 py-1.5 text-sm font-semibold">Offer for {partnerName}</p>}
         <EventHeader ev={ev} />
       </div>
       <aside className="card h-fit space-y-4 p-6 lg:sticky lg:top-24">

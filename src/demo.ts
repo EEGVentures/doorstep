@@ -11,6 +11,10 @@ const store = {
 };
 export const demoRole = (): 'guest' | 'member' => (store.get('ds_demo_role') === 'member' ? 'member' : 'guest');
 export const setDemoRole = (r: 'guest' | 'member') => { store.set('ds_demo_role', r); location.reload(); };
+/** Price-visibility option under review: 'signed_in' (default, matches the database) or 'everyone'. */
+export const demoPrices = (): 'everyone' | 'signed_in' => (store.get('ds_demo_prices') === 'everyone' ? 'everyone' : 'signed_in');
+export const setDemoPrices = (v: 'everyone' | 'signed_in') => { store.set('ds_demo_prices', v); location.reload(); };
+const guestBlind = () => demoRole() === 'guest' && demoPrices() === 'signed_in';
 
 export function demoSession(): any {
   if (!DEMO || demoRole() !== 'member') return null;
@@ -82,9 +86,11 @@ if (DEMO) {
   window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url, location.href);
     const p = url.pathname;
-    if (p.includes('/rest/v1/event_listings')) return json(listings, 200, 700);
-    if (p.includes('/rest/v1/events')) return json(eventFor(decodeURIComponent((url.searchParams.get('slug') ?? '').replace(/^eq\./, ''))), 200, 300);
-    if (p.includes('/rest/v1/rpc/has_active_membership')) return json(demoRole() === 'member');
+    if (p.includes('/rest/v1/event_listings')) return json(guestBlind() ? listings.map((l) => ({ ...l, from_price_pence: null })) : listings, 200, 700);
+    if (p.includes('/rest/v1/events')) {
+      const ev = eventFor(decodeURIComponent((url.searchParams.get('slug') ?? '').replace(/^eq\./, '')));
+      return json(guestBlind() ? { ...ev, ticket_types: ev.ticket_types.map(({ price_pence, fee_pence, face_value_pence, ...t }) => t) } : ev, 200, 300);
+    }
     if (p.endsWith('/api/geo')) return json({ city: 'Cardiff', country: 'GB', lat: 51.48, lng: -3.18 }, 200, 250);
     if (p.includes('/rest/v1/my_tickets')) return json(demoRole() === 'member' ? myTickets() : []);
     if (p.includes('/rest/v1/profiles')) return json({ id: demoSession()?.user.id, email: 'preview@doorsteptickets.com', first_name: 'Preview', last_name: 'Member', role: 'customer', marketing_email_consent: true });

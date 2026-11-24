@@ -86,10 +86,26 @@ export default handler(['GET', 'POST'], async (req, res) => {
       return { cancelled: ev.id, refunds: results };
     }
     case 'create-partner': {
-      const b = bodyOf(req, z.object({ name: z.string().min(2).max(120), contactEmail: z.string().email().optional() }).parse);
-      const { data, error } = await db().from('partners').insert({ name: b.name, contact_email: b.contactEmail ?? null }).select().single();
+      const b = bodyOf(req, z.object({
+        name: z.string().min(2).max(120), contactEmail: z.string().email().optional(),
+        welcomeTitle: z.string().trim().min(2).max(80).optional(), welcomeLine: z.string().trim().max(160).optional(),
+      }).parse);
+      const { data, error } = await db().from('partners').insert({
+        name: b.name, contact_email: b.contactEmail ?? null, welcome_title: b.welcomeTitle ?? null, welcome_line: b.welcomeLine ?? null,
+      }).select().single();
       if (error) throw error;
       await audit(staff.id, 'partner.create', 'partner', data.id, b);
+      return data;
+    }
+    case 'set-partner-welcome': {
+      // The header shown at the top of this partner's /go links, e.g. "Thank you to our Blue Light services!"
+      const b = bodyOf(req, z.object({
+        partnerId: z.string().uuid(), welcomeTitle: z.string().trim().min(2).max(80).nullable(), welcomeLine: z.string().trim().max(160).nullable(),
+      }).parse);
+      const { data, error } = await db().from('partners')
+        .update({ welcome_title: b.welcomeTitle, welcome_line: b.welcomeLine }).eq('id', b.partnerId).select().single();
+      if (error) throw error;
+      await audit(staff.id, 'partner.welcome', 'partner', b.partnerId, b);
       return data;
     }
     case 'approve-partner': {

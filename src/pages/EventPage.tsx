@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { useAuth, useMembership } from '@/lib/auth';
+import { useAuth } from '@/lib/auth';
 import { eventDateLong, eventTime, pounds2 } from '@/lib/format';
 import { photoName } from '@/components/EventTile';
 import { BottomSheet } from '@/components/BottomSheet';
@@ -21,15 +21,21 @@ function fromListing(qc: ReturnType<typeof useQueryClient>, slug?: string) {
     ticket_types: [], placeholder: true };
 }
 
+// Guests may not read prices (column grants in the database), so ask for them only when signed in.
+const TT_BASE = 'id, name, capacity, sold, held, max_per_order, sort_order';
+const TT_PRICED = `${TT_BASE}, price_pence, fee_pence, face_value_pence`;
+
 export function useEvent(slug: string | undefined) {
   const qc = useQueryClient();
+  const { session } = useAuth();
+  const signedIn = Boolean(session);
   return useQuery({
-    queryKey: ['event', slug],
+    queryKey: ['event', slug, signedIn],
     enabled: Boolean(slug),
     placeholderData: () => fromListing(qc, slug),
     queryFn: async () => {
       const { data, error } = await supabase.from('events')
-        .select('id, slug, title, description, image_url, starts_at, doors_at, status, venue:venues(name, city, address_line, postcode, timezone, lat, lng), ticket_types(id, name, price_pence, fee_pence, face_value_pence, capacity, sold, held, max_per_order, sort_order)')
+        .select(`id, slug, title, description, image_url, starts_at, doors_at, status, venue:venues(name, city, address_line, postcode, timezone, lat, lng), ticket_types(${signedIn ? TT_PRICED : TT_BASE})`)
         .eq('slug', slug!).maybeSingle();
       if (error) throw error;
       return data as any;
@@ -76,37 +82,45 @@ export function BuyBar({ from, label, onOpen, disabled, tucked }: { from: number
 export const toView = (types: any[]): TicketTypeView[] =>
   [...types].sort((a, b) => a.sort_order - b.sort_order).map((t) => ({ ...t, available: t.available ?? t.capacity - t.sold - t.held > 0 }));
 
+/** Guest view: what's on sale, with prices only if the database shares them with guests. */
+function GuestTickets({ types, here }: { types: TicketTypeView[]; here: string }) {
+  const priced = types.some((t) => t.price_pence != null);
+  return (
+    <>
+      <h2 className="text-xl font-semibold">Fancy it?</h2>
+      {types.length > 0 && (
+        <ul className="divide-y divide-line rounded-2xl border border-line">
+          {types.map((t) => (
+            <li key={t.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <span className={`font-medium ${t.available ? '' : 'text-muted line-through'}`}>{t.name}</span>
+              <span className="text-sm tabular-nums text-muted">{!t.available ? 'Sold out' : priced ? pounds2(t.price_pence + t.fee_pence) : 'Sign in for price'}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="text-muted">{priced ? 'Booking needs a free Doorstep account. It takes a minute.' : 'Prices are shown once you sign in. Your account is free and takes a minute.'}</p>
+      <PrimaryLink to={`/signin?next=${encodeURIComponent(here)}`}>{priced ? 'Sign in to book' : 'Sign in to see prices'}</PrimaryLink>
+    </>
+  );
+}
+
 function BookingPanel({ ev, here }: { ev: any; here: string }) {
   const [params] = useSearchParams();
   const { session } = useAuth();
-  const member = useMembership();
   return (
     <div className="space-y-4">
       {params.get('cancelled') && <Notice>Payment cancelled. Your tickets have been released.</Notice>}
       {ev.status === 'cancelled' ? <Notice>This event has been cancelled.</Notice>
         : ev.status !== 'on_sale' && ev.status !== 'sold_out' ? <Notice>Tickets are not on sale right now.</Notice>
-        : !session ? (
-          <>
-            <h2 className="text-xl font-semibold">Fancy it?</h2>
-            <p className="text-muted">Sign in or make an account to book. It takes a minute.</p>
-            <PrimaryLink to={`/signin?next=${encodeURIComponent(here)}`}>Sign in to book</PrimaryLink>
-          </>
-        ) : member.isPending ? <Loader mode="inline" label="Checking membership" />
-        : member.data ? <TicketPicker types={toView(ev.ticket_types)} />
-        : (
-          <>
-            <h2 className="text-xl font-semibold">This one’s for members</h2>
-            <p className="text-muted">Join Doorstep to book this and every other event at member prices.</p>
-            <PrimaryLink to={`/join?next=${encodeURIComponent(here)}`}>Become a member</PrimaryLink>
-          </>
-        )}
+        : !session ? <GuestTickets types={toView(ev.ticket_types)} here={here} />
+        : <TicketPicker types={toView(ev.ticket_types)} />}
       <p className="text-xs text-muted">Questions? <Link className="link" to="/legal/refunds">Refunds and cancellations</Link></p>
     </div>
   );
 }
 
 export const fromPrice = (types: any[]) => {
-  const p = types.filter((t) => t.capacity - t.sold - t.held > 0 || t.available).map((t) => t.price_pence + t.fee_pence);
+  const p = types.filter((t) => t.price_pence != null && (t.capacity - t.sold - t.held > 0 || t.available)).map((t) => t.price_pence + t.fee_pence);
   return p.length ? Math.min(...p) : null;
 };
 
@@ -122,13 +136,14 @@ export default function EventPage() {
   const ev = q.data;
   const here = `/events/${ev.slug}`;
   const from = fromPrice(ev.ticket_types ?? []);
-  const soldOut = ev.status === 'sold_out' || from == null;
+  const types = ev.ticket_types ?? [];
+  const soldOut = ev.status === 'sold_out' || (!q.isPlaceholderData && !types.some((t: any) => t.capacity - t.sold - t.held > 0));
 
   return (
     <div className="ambient grid gap-8 pb-24 lg:grid-cols-[1fr_380px] lg:pb-0">
       <EventHeader ev={ev} />
       <aside className="card hidden h-fit p-6 lg:sticky lg:top-24 lg:block">{q.isPlaceholderData ? <Loader mode="inline" label="Getting tickets" /> : <BookingPanel ev={ev} here={here} />}</aside>
-      <BuyBar from={soldOut ? null : from} label={soldOut ? 'Sold out' : 'Get tickets'} onOpen={() => setSheet(true)} disabled={soldOut && ev.status !== 'on_sale'} tucked={sheet || q.isPlaceholderData} />
+      <BuyBar from={soldOut ? null : from} label={soldOut ? 'Sold out' : from == null ? 'See tickets' : 'Get tickets'} onOpen={() => setSheet(true)} disabled={soldOut && ev.status !== 'on_sale'} tucked={sheet || q.isPlaceholderData} />
       <BottomSheet open={sheet} onClose={close} label="Book tickets">
         <h2 className="mb-1 text-lg font-semibold">{ev.title}</h2>
         <p className="mb-4 text-sm tabular-nums text-muted">{eventDateLong(ev.starts_at, ev.venue.timezone)}</p>

@@ -2,9 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { useAuth, useMembership } from '@/lib/auth';
+import { useAuth } from '@/lib/auth';
 import { useCity } from '@/lib/city';
-import { Empty, Loader, PrimaryLink } from '@/components/ui';
+import { Empty, Loader } from '@/components/ui';
 import { EventTile, TileSkeleton, type TileSize } from '@/components/EventTile';
 import { CityPicker } from '@/components/CityPicker';
 
@@ -116,13 +116,15 @@ function inWindow(iso: string, when: When, now = new Date()) {
   return t >= fri && t < mon;
 }
 
-function MemberTile({ style }: { style?: CSSProperties }) {
+/** Guests only: browsing is free, an account is needed to book (no subscription). */
+function AccountTile({ style, pricesHidden }: { style?: CSSProperties; pricesHidden: boolean }) {
   return (
     <div className="tile surface-ink reveal flex flex-col justify-between p-5 text-white" style={style}>
       <img src="/brand/doorstep-emblem-v4-white.png" alt="" className="h-8 w-8" />
       <div className="space-y-2">
-        <p className="font-display text-lg font-semibold leading-snug text-white" style={{ textWrap: 'balance' } as CSSProperties}>Every night out on your doorstep, at member prices</p>
-        <Link to="/join" className="press inline-block text-sm font-semibold text-white underline decoration-amber decoration-2 underline-offset-4">Join Doorstep →</Link>
+        <p className="font-display text-lg font-semibold leading-snug text-white" style={{ textWrap: 'balance' } as CSSProperties}>
+          {pricesHidden ? 'Free account, prices and booking in a minute' : 'Free account, then book any night in a minute'}</p>
+        <Link to="/signin?next=%2F" className="press inline-block text-sm font-semibold text-white underline decoration-amber decoration-2 underline-offset-4">Make an account →</Link>
       </div>
     </div>
   );
@@ -134,7 +136,6 @@ export default function Discover() {
   const stagger = useRef(true);
   const grid = useRef<HTMLDivElement>(null);
   const { session } = useAuth();
-  const member = useMembership();
   const q = useQuery({
     queryKey: ['listings'],
     queryFn: async () => {
@@ -145,7 +146,8 @@ export default function Discover() {
     },
   });
   const slow = useAfter(q.isPending, 1000);
-  const showMember = !(session && member.data);
+  const showMember = !session;
+  const pricesHidden = (q.data ?? []).some((e) => e.from_price_pence == null && e.tickets_left > 0);
 
   const { cities, city, choose, detected } = useCity(q.data);
   const near = useMemo(() => (q.data ?? []).filter((e) => e.venue_city === city && inWindow(e.starts_at, when)).map((e) => ({ e })),
@@ -180,7 +182,7 @@ export default function Discover() {
     <div className="ambient space-y-8">
       <section className="space-y-5">
         <h1 className="text-4xl font-bold leading-[1.08] tracking-[-0.01em] sm:text-6xl">Good nights out, <span className="brand-underline">on your Doorstep.</span></h1>
-        <p className="max-w-xl text-lg text-muted">Gigs, comedy, theatre and more at venues near you, at member prices.</p>
+        <p className="max-w-xl text-lg text-muted">Gigs, comedy, theatre and more at venues near you. Free to browse, book with a free account.</p>
       </section>
 
       {q.isPending && (
@@ -218,19 +220,13 @@ export default function Discover() {
             <div className="bento-wrap" ref={grid}><div key={when + city} className={`bento ${leaving ? 'grid-leaving' : ''}`}>
               <EventTile e={lead.e} size="big" className="reveal" style={delay()} />
               {firstRow.map((x) => <EventTile key={x.e.id} e={x.e} className="reveal" style={delay()} />)}
-              {showMember && <MemberTile style={delay()} />}
+              {showMember && <AccountTile style={delay()} pricesHidden={pricesHidden} />}
               {after.map((x, k) => <EventTile key={x.e.id} e={x.e} size={sizes[k]} className="reveal" style={delay()} />)}
             </div></div>
           )}
         </section>
       )}
 
-      {session && !member.data && member.isSuccess && (
-        <div className="card flex flex-col items-start gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-medium">You’re not a member yet. Join to book any night out.</p>
-          <PrimaryLink to="/join">Become a member</PrimaryLink>
-        </div>
-      )}
     </div>
   );
 }
