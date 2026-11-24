@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BottomSheet } from './BottomSheet';
+import { ALL } from '@/lib/city';
 
 type City = { name: string; count: number };
 
@@ -35,10 +36,10 @@ function List({ cities, value, onPick, detected }: { cities: City[]; value: stri
                 className={`press flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors duration-150 ${on ? 'bg-wash' : 'hover:bg-ink/[0.04] focus-visible:bg-ink/[0.04]'}`}>
                 <span className={on ? '' : 'text-ink/30'}><HouseMark on={on} /></span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-display text-lg font-semibold leading-tight text-ink">{c.name}</span>
+                  <span className="block font-display text-lg font-semibold leading-tight text-ink">{c.name === ALL ? 'Every city' : c.name}</span>
                   <span className="block font-sans text-sm font-normal tabular-nums text-muted">{c.count} night{c.count === 1 ? '' : 's'} out</span>
                 </span>
-                {on && <span className="font-sans text-xs font-semibold text-ink">Your doorstep</span>}
+                {on && c.name !== ALL && <span className="font-sans text-xs font-semibold text-ink">Your doorstep</span>}
               </button>
             </li>
           );
