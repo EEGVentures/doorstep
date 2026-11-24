@@ -22,31 +22,30 @@ export function demoSession(): any {
     user: { id: '00000000-0000-4000-8000-000000000001', email: 'preview@doorsteptickets.com', app_metadata: {}, user_metadata: {}, aud: 'authenticated', created_at: '' } };
 }
 
-const day = 86400e3;
-const base = new Date(); base.setHours(12, 0, 0, 0);
-const at = (d: number, h: number) => new Date(base.getTime() + d * day + (h - 12) * 3600e3).toISOString();
 const venues: Record<string, { city: string; address: string; postcode: string; lat: number; lng: number }> = {
+  "O2 Shepherd's Bush Empire": { city: 'London', address: "Shepherd's Bush Green", postcode: 'W12 8TT', lat: 51.5035, lng: -0.2244 },
+  'Cambridge Theatre': { city: 'London', address: 'Earlham St', postcode: 'WC2H 9HU', lat: 51.5136, lng: -0.1268 },
   'Tramshed': { city: 'Cardiff', address: 'Clive St, Grangetown', postcode: 'CF11 7EN', lat: 51.4706, lng: -3.1937 },
-  'The Gate': { city: 'Cardiff', address: 'Keppoch St, Roath', postcode: 'CF24 3JW', lat: 51.4925, lng: -3.1636 },
-  'The Fleece': { city: 'Bristol', address: '12 St Thomas St', postcode: 'BS1 6JJ', lat: 51.4527, lng: -2.5862 },
-  'Thekla': { city: 'Bristol', address: 'The Grove', postcode: 'BS1 4RB', lat: 51.4483, lng: -2.5953 },
+  'The Forum': { city: 'Bath', address: '20 Southgate St', postcode: 'BA1 1TP', lat: 51.3784, lng: -2.3591 },
+  'Connexin Live': { city: 'Hull', address: 'Myton St', postcode: 'HU1 2PS', lat: 53.7406, lng: -0.3365 },
+  'The Prospect Building': { city: 'Bristol', address: 'Temple Quarter', postcode: 'BS1 6QF', lat: 51.45, lng: -2.581 },
 };
-const rows: [string, string | null, string, string, number, number, string | null][] = [
-  ['Quiz & Tunes', null, 'The Gate', 'Quiz & games', 0, 19, 'last_few'],
-  ['Crowd Pleasers Live', 'music.jpg', 'Tramshed', 'Music', 3, 20, 'selling_fast'],
-  ['Late Laughs Comedy', 'comedy.jpg', 'The Gate', 'Comedy', 4, 20, 'new'],
-  ['Blue Note Evenings', 'jazz.jpg', 'The Fleece', 'Jazz & Blues', 5, 20, null],
-  ['The Glass Menagerie', 'theatre.jpg', 'The Gate', 'Theatre', 6, 19, null],
-  ['Neighbourhood Session', null, 'Thekla', 'Music', 7, 20, 'new'],
-  ['Friday Floorfillers', 'neighbourhood.jpg', 'Tramshed', 'Club nights', 9, 22, 'selling_fast'],
-  ['Open Mic Comedy', 'comedy.jpg', 'The Fleece', 'Comedy', 10, 20, null],
+// Ernest Promotions' own upcoming shows (Master Tickets sheet), with their real artwork. Dates are real, not relative.
+const on = (d: string, h: number, m = 0) => new Date(`${d}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00Z`).toISOString();
+const rows: [string, string | null, string, string, string, string | null][] = [
+  ['East 17: Boys Are Back Again', 'east17-tour.jpg', "O2 Shepherd's Bush Empire", 'Music', on('2026-12-03', 19, 30), 'selling_fast'],
+  ['East 17: Boys Are Back Again', 'east17-tour.jpg', 'Tramshed', 'Music', on('2026-12-02', 20), null],
+  ['Snow White On Ice', 'snow-white.jpg', 'Connexin Live', 'Family', on('2026-12-18', 19), 'new'],
+  ['Peter Pan On Ice', 'peter-pan-bath.jpg', 'The Forum', 'Family', on('2026-12-27', 14), 'last_few'],
+  ['Aswad: Roots & Soul', 'aswad-bristol.jpg', 'The Prospect Building', 'Music', on('2027-05-09', 18), 'new'],
+  ['Sydnie Christmas: The Artist Tour', 'sydnie-christmas.jpg', 'Cambridge Theatre', 'Music', on('2027-05-17', 18, 30), 'selling_fast'],
 ];
-const listings = rows.map(([title, img, venue, category, d, h, flag], i) => {
+const listings = rows.map(([title, img, venue, category, starts, flag], i) => {
   const v = venues[venue];
   return {
-    id: `e${i}`, slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'), title, image_url: img ? `demo/${img}` : null, category,
-    starts_at: at(d, h), doors_at: at(d, h - 1), status: title === 'The Glass Menagerie' ? 'sold_out' : 'on_sale', venue_name: venue, venue_city: v.city,
-    timezone: 'Europe/London', from_price_pence: 1410 + i * 100, tickets_left: title === 'The Glass Menagerie' ? 0 : 40, venue_lat: v.lat, venue_lng: v.lng,
+    id: `e${i}`, slug: `${title}-${v.city}`.toLowerCase().replace(/[^a-z0-9]+/g, '-'), title, image_url: img ? `sample/ep/${img}` : null, category,
+    starts_at: starts, doors_at: new Date(new Date(starts).getTime() - 3600e3).toISOString(), status: venue === 'Tramshed' ? 'sold_out' : 'on_sale', venue_name: venue, venue_city: v.city,
+    timezone: 'Europe/London', from_price_pence: 1410 + i * 100, tickets_left: venue === 'Tramshed' ? 0 : 40, venue_lat: v.lat, venue_lng: v.lng,
     flag,
   };
 });
@@ -54,7 +53,7 @@ const eventFor = (slug: string) => {
   const l = listings.find((x) => x.slug === slug) ?? listings[1];
   const i = listings.indexOf(l), v = venues[l.venue_name], sold = l.status === 'sold_out';
   return { id: l.id, slug: l.slug, title: l.title, category: l.category, flag: l.flag, image_url: l.image_url, starts_at: l.starts_at, doors_at: l.doors_at, status: l.status,
-    description: `${l.category} at ${l.venue_name}, ${l.venue_city}. This is a sample night for the preview; real listings come from venues.`,
+    description: `${l.category} at ${l.venue_name}, ${l.venue_city}. Sample listing for the preview, built from a real Ernest Promotions show.`,
     venue: { name: l.venue_name, city: v.city, address_line: v.address, postcode: v.postcode, timezone: 'Europe/London', lat: v.lat, lng: v.lng },
     ticket_types: [
       { id: `${l.id}-ga`, name: 'General admission', price_pence: 1260 + i * 100, fee_pence: 150, face_value_pence: 2100 + i * 100, capacity: 50, sold: sold ? 50 : 10, held: 0, max_per_order: 6, sort_order: 0 },
@@ -95,7 +94,7 @@ if (DEMO) {
       const ev = eventFor(decodeURIComponent((url.searchParams.get('slug') ?? '').replace(/^eq\./, '')));
       return json(guestBlind() ? { ...ev, ticket_types: ev.ticket_types.map(({ price_pence, fee_pence, face_value_pence, ...t }) => t) } : ev, 200, 300);
     }
-    if (p.endsWith('/api/geo')) return json({ city: 'Cardiff', country: 'GB', lat: 51.48, lng: -3.18 }, 200, 250);
+    if (p.endsWith('/api/geo')) return json({ city: 'London', country: 'GB', lat: 51.51, lng: -0.13 }, 200, 250);
     if (p.includes('/rest/v1/my_tickets')) return json(demoRole() === 'member' ? myTickets() : []);
     if (p.includes('/rest/v1/profiles')) return json({ id: demoSession()?.user.id, email: 'preview@doorsteptickets.com', first_name: 'Preview', last_name: 'Member', role: 'customer', marketing_email_consent: true });
     if (p.includes('/rest/v1/')) return json([]);
