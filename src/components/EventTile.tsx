@@ -65,7 +65,8 @@ export function EventTile({ e, size = 'sm', style, className = '', away }: { e: 
   const ink = !e.image_url && big; // a photo-less lead tile goes ink so the house shape still reads
   const drift = useDrift();
   const fav = big && Boolean(e.house_favourite);
-  const when = `${eventDate(e.starts_at, e.timezone)} · ${eventTime(e.starts_at, e.timezone)}`;
+  // Tiles use the short time (8pm, 7:30pm) so the date pill and a flag can share the top row more often.
+  const when = `${eventDate(e.starts_at, e.timezone)} · ${eventTime(e.starts_at, e.timezone).replace(':00', '')}`;
   return (
     <Link to={`/events/${e.slug}`} viewTransition style={style} onClick={doorOpen}
       onPointerMove={big ? drift.onPointerMove : undefined} onPointerLeave={big ? drift.onPointerLeave : undefined}
@@ -77,12 +78,13 @@ export function EventTile({ e, size = 'sm', style, className = '', away }: { e: 
       </>}
       {fav && <HouseLine />}
       {fav && <span className="house-label" aria-hidden="true">House favourite</span>}
-      <span className={`absolute left-3 top-3 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium tabular-nums ${dark ? 'glass-dark' : 'glass text-ink'}`}>{when}</span>
+      {/* Top row: flag banner top left, date pill top right. On a narrow tile the date drops to a second line, still right-aligned. */}
+      <span className={`absolute inset-x-3 top-3 flex flex-wrap items-center gap-2 ${big ? 'sm:inset-x-4 sm:top-4' : ''}`}>
+        {!soldOut && <FlagBanner flag={e.flag} onDark={dark} size={big ? 'md' : 'sm'} />}
+        <span className={`ml-auto whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium tabular-nums ${dark ? 'glass-dark' : 'glass text-ink'}`}>{when}</span>
+      </span>
       <span className={`absolute inset-x-0 bottom-0 flex flex-col ${fav ? 'px-[14%] pb-7 sm:pb-9' : big ? 'p-5 sm:p-7' : 'p-3 sm:p-4'} ${dark ? 'text-white' : 'text-ink'}`}>
-        {(e.category || (!soldOut && e.flag)) && <span className={`flex items-center gap-2 ${e.flag && !soldOut ? 'mb-1.5' : ''}`}>
-          {!soldOut && <FlagBanner flag={e.flag} onDark={dark} size={big ? 'md' : 'sm'} />}
-          {e.category && <span className={`truncate text-xs font-medium ${dark ? 'text-white/75' : 'text-ink/60'}`}>{e.category}</span>}
-        </span>}
+        {e.category && <span className={`truncate text-xs font-medium ${dark ? 'text-white/75' : 'text-ink/60'}`}>{e.category}</span>}
         <span className={`font-display font-semibold leading-tight ${big ? 'text-3xl sm:text-4xl' : photo ? 'line-clamp-2 text-[15px] sm:text-lg' : 'line-clamp-3 text-lg sm:text-2xl'}`}
           style={{ textWrap: 'balance' } as CSSProperties}>{e.title}</span>
         <span className={`mt-0.5 truncate ${big ? 'text-base' : 'text-xs sm:text-sm'} ${dark ? 'text-white/80' : 'text-ink/70'}`}>{e.venue_name}{away ? <> · <span className="tabular-nums">{away}</span></> : `, ${e.venue_city}`}</span>

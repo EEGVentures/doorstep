@@ -54,9 +54,9 @@ export function EventHeader({ ev }: { ev: any }) {
     <div className="space-y-4">
       <div className={`tile tile-hero aspect-[4/5] sm:aspect-[16/9] ${ev.image_url ? "!bg-transparent" : "tile-wash"}`}>
         {ev.image_url && <img src={ev.image_url} alt="" className="tile-bg" style={{ viewTransitionName: photoName(ev.slug) }} />}
+        {ev.status !== 'sold_out' && ev.flag && <div className="absolute left-5 top-5 sm:left-8 sm:top-8"><FlagBanner flag={ev.flag} onDark={Boolean(ev.image_url)} size="md" /></div>}
         {/* Caption carries its own fade and transition name, so it settles over the photo as the photo grows into place. */}
         <div className={`absolute inset-x-0 bottom-0 rounded-b-[28px] p-5 sm:p-8 ${ev.image_url ? 'hero-caption pt-24 text-white sm:pt-32' : 'text-ink'}`}>
-          {ev.status !== 'sold_out' && ev.flag && <div className="mb-3"><FlagBanner flag={ev.flag} onDark={Boolean(ev.image_url)} size="md" /></div>}
           <p className={`text-sm font-medium tabular-nums sm:text-base ${ev.image_url ? 'text-white/80' : 'text-ink/70'}`}>{ev.category ? <>{ev.category} · </> : null}{eventDateLong(ev.starts_at, tz)}</p>
           <h1 className={`mt-1 text-3xl font-bold leading-[1.08] sm:text-5xl ${ev.image_url ? '!text-white' : ''}`}>{ev.title}</h1>
           <p className={`mt-1 ${ev.image_url ? 'text-white/80' : 'text-ink/70'}`}>{ev.venue.name}, {ev.venue.city}</p>
