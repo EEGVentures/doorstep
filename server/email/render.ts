@@ -1,10 +1,11 @@
 import { TEMPLATES, type TemplateId } from './templates.generated.js';
 
-// Subject lines signed off on 4 Nov 2026 (see the customer email journey PDF).
+// Subject lines signed off on 4 Nov 2026 (see the customer email journey PDF). Door passes arrive with the
+// order since 25 Nov 2026, so tickets-ready became a reminder the day before doors.
 export const SUBJECTS: Record<TemplateId, string> = {
   'welcome': 'Welcome to Doorstep, {{first_name}}',
   'order-confirmed': 'You’re going to {{event_name}}',
-  'tickets-ready': 'Your tickets for {{event_name}} have landed',
+  'event-reminder': 'See you {{event_day}}: {{event_name}}',
   'event-cancelled': 'You’ve been refunded: {{event_name}} is cancelled',
 };
 

@@ -26,6 +26,14 @@ The service emails (ten now that the membership-active and renewal-reminder emai
 | ~~`{{TBC:renewal_reminder_days}}`~~ | Withdrawn 24 Nov 2026 with the renewal reminder email. | |
 | `{{TBC:company_footer}}` | Every email footer (registered name, number, address) | Nathan, once Doorstep Tickets Ltd details are final |
 
+## Service emails (updated 25 Nov 2026)
+
+- **Door passes on purchase (Nathan, 25 Nov 2026).** The buyer gets their code as soon as they pay, not 48 hours before doors. The order email carries the door passes; the old tickets-ready email is now `event-reminder`, sent 24 hours before doors (skipped if the show is less than about a day away). Knock-on: codes can be screenshotted or passed on for longer before the show. Each code still scans once, and a refunded ticket's code disappears from the wallet and is revoked for the venue.
+- Built: welcome, order confirmed (with door passes), event reminder, event cancelled. Stickers removed (no-orange rule), the tagline underline covers "on your Doorstep.", buttons stack on phones.
+- The welcome email is queued by `handle_new_user()` when an account is created. When existing customers are copied over in bulk (for example from Base44), set `skip_welcome: true` in their user metadata so they are not welcomed again.
+- Still to write before launch: password reset (until then Supabase sends its own plain email), event changed, refund issued.
+- Still due: the Liquid Glass and motion redesign to match the finished app.
+
 ## Deliberately not carried over from Base44
 
 - **Referral wallet credit:** holding customer credit raises FCA e-money questions (Ken, 3 Nov). Left out until decided.

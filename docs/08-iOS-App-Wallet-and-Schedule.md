@@ -14,7 +14,7 @@ Status: approved by Nathan on 4 November 2026 unless marked PROPOSED. Add this f
 | Transactional email | Resend. Approved. Mailchimp only for consented marketing. |
 | Payments | The existing Stripe account in the Doorstep company name. Stripe Checkout for tickets, Stripe Billing for web membership. |
 | iOS app | Required at soft launch (Nathan's decision, 14 Oct 2026). Expo (React Native), same Supabase backend and logins. Not Capacitor. |
-| Ticket reveal | One server-enforced rule: barcodes become visible to the buyer 48 hours before the event's doors time. Venue close-off export is not blocked by the reveal. |
+| Ticket reveal | **Changed 25 Nov 2026 (Nathan): door passes on purchase.** The buyer sees the barcode as soon as the order is paid, for their own valid tickets only (RLS `barcodes_owner_valid`). Replaces the earlier 48-hour reveal. The venue close-off preview still goes at doors minus 48 hours. |
 | Affiliate link defaults | Up to 6 tickets per order. Repeat orders allowed while the link is live. Link expires when the event's sales close. An admin approves every affiliate partner. Admins can override per link. |
 | Scheduled jobs | PROPOSED: Vercel Cron triggering idempotent Supabase-backed job rows. Confirm with Nathan before adding Inngest or another provider. |
 
@@ -45,7 +45,7 @@ Source: [App Review Guidelines](https://developer.apple.com/app-store/review/gui
 
 - Each valid ticket can be added to Apple Wallet as a pass from the app and from the web wallet.
 - The pass is generated server-side on Vercel and signed with a Pass Type ID certificate from the company's Apple Developer account. The certificate and keys live only in Vercel environment variables, never in Git or `VITE_` variables.
-- The pass becomes available at the 48-hour reveal, not before. It carries the same exact barcode string that goes in the venue close-off report, as a QR code (the standard format in section 5a).
+- The pass is available as soon as the order is paid (changed from the 48-hour reveal on 25 Nov 2026). It carries the same exact barcode string that goes in the venue close-off report, as a QR code (the standard format in section 5a).
 - Passes support Wallet's update web service: a refunded or cancelled ticket's pass is voided, and a reissued ticket gets a new pass with a new code.
 - Google Wallet: PROPOSED, after soft launch.
 
@@ -81,7 +81,7 @@ The October migration plan targets a soft launch in early February 2027. Members
 | --- | --- | --- | --- |
 | 1 | Local foundation (`START-IN-CLAUDE.md`) | 4–21 Nov 2026 | Fixture app renders all routes, network-blocking tests pass |
 | 2 | Supabase schema, RLS, auth, Vercel preview | 17 Nov – 5 Dec | A test user signs in on a Vercel preview; RLS tests pass |
-| 3 | Commerce: ticket checkout, Stripe Billing membership, affiliate links, 48h reveal | 24 Nov – 19 Dec | Test member and affiliate purchases succeed; non-member purchase is refused |
+| 3 | Commerce: ticket checkout, Stripe Billing membership, affiliate links, door passes on purchase | 24 Nov – 19 Dec | Test member and affiliate purchases succeed; non-member purchase is refused |
 | 4 | iOS app (Expo), in-app purchase membership, Apple Wallet passes | 1 Dec – 16 Jan 2027 | Nathan buys a test ticket in TestFlight and adds it to Wallet |
 | 5 | Close-off production workflow, Tramshed Cardiff rehearsal to Nathan's inbox | 1 Dec – 9 Jan | A mock Tramshed event produces versioned reports on schedule |
 | 6 | Test and harden: payments, load test, penetration test, GDPR paperwork | 5–30 Jan | No high-severity pen-test findings open |

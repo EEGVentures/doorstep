@@ -25,7 +25,7 @@ Reports go straight to this recipient as the scheduled job's direct delivery. Th
 
 | Step | When | Notes |
 | --- | --- | --- |
-| Preview report v1 | Doors minus 48 hours | Same moment as the buyer reveal |
+| Preview report v1 | Doors minus 48 hours | Buyers have their codes from purchase (since 25 Nov 2026) |
 | Final close-off report | Doors minus 4 hours | Sales snapshot taken at this time |
 | Late-sales revision reports | Every 30 minutes after the final report, until doors minus 30 minutes | Only if barcodes were added or revoked; versioned |
 | Import acknowledgement due | Doors minus 2 hours | Missed acknowledgement raises an alert in the operations dashboard |

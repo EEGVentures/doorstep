@@ -33,7 +33,7 @@ npm run stripe:setup # create the ticket-payment webhook in Stripe TEST mode
 | Last ticket sold once | conditional stock update in `create_reservation()`; `tests/db/concurrency.mjs` |
 | Paid only on a verified Stripe event; duplicates harmless | `api/webhooks/stripe.ts`, `provider_events`, `fulfil_order()` |
 | Barcodes random, unique forever, never reused | `generate_barcode()`, `ticket_barcodes` (immutable) |
-| Barcode visible to the buyer only from 48h before doors | RLS policy `barcodes_owner_after_reveal` |
+| Barcode visible to the buyer as soon as the order is paid, own valid tickets only | RLS policy `barcodes_owner_valid` |
 | One standard close-off CSV, versioned, sold-out events included | `server/closeoff.ts`, `server/closeoff-runner.ts` |
 | No live payments, venue sends or real customer emails by accident | `ALLOW_LIVE_PAYMENTS`, `CLOSEOFF_LIVE_SENDING`, `EMAIL_SANDBOX_TO` in `server/env.ts` |
 
