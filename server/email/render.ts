@@ -7,6 +7,8 @@ export const SUBJECTS: Record<TemplateId, string> = {
   'order-confirmed': 'You’re going to {{event_name}}',
   'event-reminder': 'See you {{event_day}}: {{event_name}}',
   'event-cancelled': 'You’ve been refunded: {{event_name}} is cancelled',
+  'event-changed': 'New {{change_label}} for {{event_name}}',
+  'refund-issued': 'You’ve been refunded {{refund_amount}}: {{event_name}}',
 };
 
 export type Brand = {

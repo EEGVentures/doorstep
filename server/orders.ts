@@ -92,3 +92,27 @@ export async function queueEventCancelledEmail(orderId: string, refundPence: num
     payload: { ...eventVars(o), refund_amount: formatPence(refundPence) },
   });
 }
+
+/** A single refund made by staff (not a whole-event cancellation, which sends event-cancelled instead). */
+export async function queueRefundIssuedEmail(orderId: string, refundPence: number, refundNote: string) {
+  const o = await loadOrder(orderId);
+  await enqueueEmail({
+    template: 'refund-issued', to: o.profile.email, userId: o.user_id, dedupeKey: `refund-issued:${o.id}:${o.refunded_pence}`,
+    payload: { ...eventVars(o), refund_amount: formatPence(refundPence), refund_note: refundNote },
+  });
+}
+
+export type EventChange = { change_label: string; change_reason: string; old_details: string; new_details: string; refund_deadline: string; version: string };
+
+/** Tells a ticket holder about a new date, time or venue. Their door passes keep working; they can ask for a refund. */
+export async function queueEventChangedEmail(orderId: string, c: EventChange) {
+  const o = await loadOrder(orderId);
+  const { version, ...vars } = c;
+  await enqueueEmail({
+    template: 'event-changed', to: o.profile.email, userId: o.user_id, dedupeKey: `event-changed:${o.id}:${version}`,
+    payload: {
+      ...eventVars(o), ...vars,
+      refund_request_url: `mailto:support@doorsteptickets.com?subject=${encodeURIComponent(`Refund for order ${o.ref}`)}`,
+    },
+  });
+}

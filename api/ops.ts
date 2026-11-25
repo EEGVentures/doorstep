@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { bodyOf, fromDbError, handler, HttpError } from '../server/http.js';
 import { audit, db, requireStaff } from '../server/supabase.js';
 import { stripe } from '../server/stripe.js';
-import { cancelPendingOrderEmails, queueEventCancelledEmail } from '../server/orders.js';
+import { cancelPendingOrderEmails, dateLong, queueEventCancelledEmail, queueEventChangedEmail, queueRefundIssuedEmail, timeOf } from '../server/orders.js';
 import { statementCsv, statementSummary, type LedgerRow } from '../server/partners.js';
 
 async function refundOrder(orderId: string, reason: string, actor: string) {
@@ -62,7 +62,45 @@ export default handler(['GET', 'POST'], async (req, res) => {
   switch (action) {
     case 'refund': {
       const b = bodyOf(req, z.object({ orderId: z.string().uuid(), reason: z.string().min(3).max(200) }).parse);
-      return refundOrder(b.orderId, b.reason, staff.id);
+      const r = await refundOrder(b.orderId, b.reason, staff.id);
+      await queueRefundIssuedEmail(b.orderId, r.amount, 'We’ve refunded your order in full, booking fees included.');
+      return r;
+    }
+    case 'change-event': {
+      // New date, time or venue. Door passes keep working; every ticket holder is emailed and can ask for a refund.
+      adminOnly();
+      const b = bodyOf(req, z.object({
+        eventId: z.string().uuid(), startsAt: z.string().datetime().optional(), doorsAt: z.string().datetime().optional(),
+        venueId: z.string().uuid().optional(), reason: z.string().min(10).max(300), refundDeadline: z.string().min(3).max(60),
+      }).parse);
+      if (!b.startsAt && !b.doorsAt && !b.venueId) throw new HttpError(400, 'NO_CHANGE', 'Give a new date, time or venue.');
+      const sel = 'id, title, starts_at, doors_at, venue_id, venue:venues(name, city, timezone)';
+      const { data: before } = await db().from('events').select(sel).eq('id', b.eventId).single();
+      if (!before) throw new HttpError(404, 'NOT_FOUND', 'Event not found');
+      const patch: Record<string, string> = {};
+      if (b.startsAt) patch.starts_at = b.startsAt;
+      if (b.doorsAt) patch.doors_at = b.doorsAt;
+      if (b.venueId) patch.venue_id = b.venueId;
+      const { data: after, error } = await db().from('events').update(patch).eq('id', b.eventId).select(sel).single();
+      if (error) throw fromDbError(error);
+      await audit(staff.id, 'event.change', 'event', b.eventId, { ...patch, reason: b.reason });
+      type Ev = { starts_at: string; doors_at: string; venue_id: string; venue: { name: string; city: string; timezone: string } };
+      const describe = (e: Ev) => `${dateLong(new Date(e.starts_at), e.venue.timezone)}, doors ${timeOf(new Date(e.doors_at), e.venue.timezone)}, ${e.venue.name}, ${e.venue.city}`;
+      const was = before as unknown as Ev, now = after as unknown as Ev;
+      const venueMoved = was.venue_id !== now.venue_id;
+      const dayMoved = dateLong(new Date(was.starts_at), was.venue.timezone) !== dateLong(new Date(now.starts_at), now.venue.timezone);
+      const change = {
+        change_label: venueMoved && dayMoved ? 'date and venue' : venueMoved ? 'venue' : dayMoved ? 'date' : 'time',
+        change_reason: b.reason, old_details: describe(was), new_details: describe(now), refund_deadline: b.refundDeadline,
+        version: new Date().toISOString(),
+      };
+      const { data: orders } = await db().from('orders').select('id').eq('event_id', b.eventId).in('status', ['paid', 'partially_refunded']);
+      const results = [];
+      for (const o of orders ?? []) {
+        try { await queueEventChangedEmail(o.id, change); results.push({ orderId: o.id, emailed: true }); }
+        catch (e) { results.push({ orderId: o.id, error: (e as Error).message }); }
+      }
+      return { changed: b.eventId, change: change.change_label, emails: results };
     }
     case 'cancel-event': {
       adminOnly();

@@ -1,0 +1,73 @@
+<!doctype html>
+<!-- Email artwork. Each <section data-out> is shot by render-assets.mjs at 2x. Glass is baked in here because
+     email clients can't blur. ?t=0..1 drives the motion frames of the door pass GIF. -->
+<html><head><meta charset="utf-8"><style>
+@font-face{font-family:Poppins;font-weight:600;src:url(../../public/brand/fonts/Poppins-SemiBold.ttf)}
+@font-face{font-family:Poppins;font-weight:700;src:url(../../public/brand/fonts/Poppins-Bold.ttf)}
+@font-face{font-family:Inter;font-weight:100 900;src:url(../../public/brand/fonts/Inter-Variable.ttf)}
+:root{--ink:#1A1030;--canvas:#FCFAF8;--muted:#655E6B;--coral:#FF5A5F;--amber:#FF8A3D;--grad:linear-gradient(90deg,#FF5A5F,#FF8A3D)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fff;font-family:Inter,sans-serif;color:var(--ink)}
+section{position:relative;overflow:hidden;background:var(--canvas)}
+.aura{position:absolute;border-radius:50%;filter:blur(46px);opacity:.55}
+.glass{position:absolute;background:rgba(255,255,255,.58);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
+ border:1px solid rgba(255,255,255,.9);box-shadow:inset 0 1px 0 #fff,0 18px 40px -18px rgba(26,16,48,.35);border-radius:18px}
+.chip{display:flex;align-items:center;gap:10px;padding:11px 16px 11px 12px;font:600 14px/1.2 Poppins,sans-serif;white-space:nowrap}
+.chip small{display:block;font:500 11.5px/1.3 Inter,sans-serif;color:var(--muted);margin-top:2px}
+.dot{width:28px;height:28px;border-radius:50%;background:var(--grad);display:grid;place-items:center;color:#fff;font:700 14px Inter;flex:none}
+.phone{position:absolute;width:236px;height:500px;border-radius:40px;background:#1A1030;padding:9px;box-shadow:0 40px 70px -30px rgba(26,16,48,.55),0 0 0 1px rgba(255,255,255,.08) inset}
+.phone .scr{width:100%;height:100%;border-radius:32px;overflow:hidden;position:relative;background:#fff}
+.phone .island{position:absolute;top:18px;left:50%;width:74px;height:21px;margin-left:-37px;border-radius:12px;background:#0B0618;z-index:3}
+.pass{position:absolute;left:12px;right:12px;border-radius:18px;background:linear-gradient(180deg,#2A1F42 0%,#1A1030 60%,#140B26 100%);color:#fff;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 24px 40px -22px rgba(26,16,48,.6)}
+.pass:before{content:"";position:absolute;left:0;right:0;top:-16px;height:17px;background:#2A1F42;clip-path:polygon(0 100%,50% 0,100% 100%)}
+</style></head><body>
+
+<!-- 1. Welcome hero: the app, in a phone, with two glass notes -->
+<section data-out="hero-welcome.jpg" style="width:600px;height:330px">
+ <div class="aura" style="width:280px;height:280px;left:300px;top:20px;background:#FF8A3D;opacity:.35"></div>
+ <div class="aura" style="width:240px;height:240px;left:420px;top:120px;background:#FF5A5F;opacity:.28"></div>
+ <div class="aura" style="width:220px;height:220px;left:40px;top:150px;background:#C9B8F0;opacity:.35"></div>
+ <div class="phone" style="left:322px;top:26px;transform:rotate(6deg)"><div class="scr"><div class="island"></div>
+  <img src="src/discover.jpg" style="width:100%;display:block;margin-top:30px"></div></div>
+ <div class="glass chip" style="left:58px;top:92px;transform:rotate(-3deg)"><span class="dot">£</span><span>Fees included<small>The price you see is the price you pay</small></span></div>
+ <div class="glass chip" style="left:34px;top:182px;transform:rotate(2deg)"><span class="dot"><img src="../../public/brand/doorstep-emblem-v4-white.png" style="width:17px"></span><span>No membership<small>Free to browse, free account to book</small></span></div>
+</section>
+
+<!-- 2. Door pass GIF: a phone with a generic pass, the "Ready now" glass note, a light sweep and a live pulse -->
+<section data-out="pass-ready" data-frames="16" style="width:600px;height:330px" id="pass">
+ <div class="aura" style="width:300px;height:300px;left:250px;top:10px;background:#FF8A3D;opacity:.32"></div>
+ <div class="aura" style="width:230px;height:230px;left:60px;top:120px;background:#C9B8F0;opacity:.38"></div>
+ <div class="phone" style="left:300px;top:22px;transform:rotate(-5deg)"><div class="scr" style="background:#FCFAF8"><div class="island"></div>
+  <div class="pass" style="top:62px;height:236px;overflow:visible">
+   <div style="padding:16px 16px 0;display:flex;gap:8px;align-items:center"><img src="../../public/brand/doorstep-emblem-v4-white.png" style="width:18px"><span style="font:600 11px Inter;opacity:.85">Door pass</span></div>
+   <div style="padding:10px 16px 0"><div style="font:400 9.5px Inter;opacity:.7">Doors open in</div><div style="font:600 22px/1.1 Poppins;margin-top:3px;letter-spacing:-.01em">2d&nbsp; 04h&nbsp; 12m</div></div>
+   <div style="position:absolute;left:10px;right:10px;bottom:10px;height:112px;border-radius:14px;background:#fff;color:var(--ink);text-align:center;padding-top:16px">
+    <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:#EEF8F1;color:#17723B;font:600 10px/1 Inter"><span id="live" style="width:7px;height:7px;border-radius:50%;background:#22A355"></span>Live now</div>
+    <div style="font:600 13.5px/1.25 Poppins;margin-top:9px">Your door pass is ready</div>
+    <div style="font:400 9.5px/1.4 Inter;color:var(--muted);margin-top:4px">Here the moment you booked.<br>Show this screen at the door.</div></div>
+   <div id="sweep" style="position:absolute;inset:0;border-radius:18px;overflow:hidden;pointer-events:none"><div style="position:absolute;top:-40px;bottom:-40px;width:70px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.22),rgba(255,255,255,0));transform:skewX(-18deg)"></div></div>
+  </div>
+  <div style="position:absolute;left:24px;right:24px;top:306px;height:4px;border-radius:2px;background:var(--grad)"></div></div></div>
+ <div class="glass chip" id="note" style="left:70px;top:120px;transform:rotate(-2deg)"><span class="dot">&#10003;</span><span>Ready now<small>In the app and Apple Wallet</small></span></div>
+</section>
+
+<!-- 3. Password reset hero: a glass key card -->
+<section data-out="hero-reset.jpg" style="width:600px;height:200px">
+ <div class="aura" style="width:240px;height:240px;left:300px;top:-30px;background:#FF8A3D;opacity:.3"></div>
+ <div class="aura" style="width:220px;height:220px;left:180px;top:20px;background:#C9B8F0;opacity:.4"></div>
+ <div class="glass" style="left:200px;top:36px;width:200px;height:128px;border-radius:24px;display:grid;place-items:center">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+   <svg width="46" height="46" viewBox="0 0 46 46"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#FF5A5F"/><stop offset="1" stop-color="#FF8A3D"/></linearGradient></defs>
+    <rect x="9" y="20" width="28" height="21" rx="6" fill="url(#g)"/><path d="M15 20v-5a8 8 0 0 1 16 0v5" fill="none" stroke="#1A1030" stroke-width="3.2" stroke-linecap="round"/><circle cx="23" cy="30" r="3" fill="#fff"/></svg>
+   <div style="display:flex;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:#1A1030"></span><span style="width:9px;height:9px;border-radius:50%;background:#1A1030"></span><span style="width:9px;height:9px;border-radius:50%;background:#1A1030"></span><span style="width:9px;height:9px;border-radius:50%;background:#1A1030"></span><span style="width:9px;height:9px;border-radius:50%;background:#1A1030"></span><span style="width:9px;height:9px;border-radius:50%;background:#1A1030"></span></div></div></div>
+</section>
+<script>
+window.setFrame = (t) => {
+  const s = document.querySelector('#sweep > div'); s.style.left = (-90 + t * 340) + 'px';
+  const live = document.getElementById('live'); const k = (Math.sin(t * Math.PI * 4) + 1) / 2;
+  live.style.boxShadow = `0 0 0 ${2 + k * 5}px rgba(34,163,85,${0.28 - k * 0.2})`;
+  document.getElementById('note').style.transform = `rotate(-2deg) translateY(${-3 * Math.sin(t * Math.PI * 2)}px)`;
+};
+</script>
+</body></html>

@@ -31,8 +31,8 @@ The service emails (ten now that the membership-active and renewal-reminder emai
 - **Door passes on purchase (Nathan, 25 Nov 2026).** The buyer gets their code as soon as they pay, not 48 hours before doors. The order email carries the door passes; the old tickets-ready email is now `event-reminder`, sent 24 hours before doors (skipped if the show is less than about a day away). Knock-on: codes can be screenshotted or passed on for longer before the show. Each code still scans once, and a refunded ticket's code disappears from the wallet and is revoked for the venue.
 - Built: welcome, order confirmed (with door passes), event reminder, event cancelled. Stickers removed (no-orange rule), the tagline underline covers "on your Doorstep.", buttons stack on phones.
 - The welcome email is queued by `handle_new_user()` when an account is created. When existing customers are copied over in bulk (for example from Base44), set `skip_welcome: true` in their user metadata so they are not welcomed again.
-- Still to write before launch: password reset (until then Supabase sends its own plain email), event changed, refund issued.
-- Still due: the Liquid Glass and motion redesign to match the finished app.
+- Redesigned 25 Nov 2026 to match the finished app: glass panels over the event's own artwork, a baked phone mock-up in the welcome email, and a short door pass GIF (first frame is the still for Outlook). Sources and the asset renderer are in `scripts/email-design/` (`gen.py` writes the templates, `render-assets.mjs` the artwork in `public/email-assets/`).
+- Added 25 Nov 2026: password reset (`supabase/templates/recovery.html`, sent by Supabase Auth, needs setting on the hosted project), event changed (sent to every paid order by the admin `change-event` action, which needs a reason and a refund deadline), refund issued (sent when staff refund an order).
 
 ## Deliberately not carried over from Base44
 
