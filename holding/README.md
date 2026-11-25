@@ -15,34 +15,31 @@ holding/
   vercel.json     security headers, CSP, London region
 ```
 
-## Sign-ups
+## Sign-ups and enquiries (Resend)
 
-Stored in Supabase table `public.launch_signups` (migration `supabase/migrations/20261124130000_launch_signups.sql`,
-tests in `tests/db/40_launch_signups.sql` and `tests/unit/holding-signup.test.ts`).
-
-- The email is used to tell the person when accounts open (that is what they asked for).
-- Marketing is a separate, **unticked** box. When ticked we store the exact wording and the time (UK GDPR / PECR).
-  Not ticking it on a later visit never removes an earlier yes. Withdrawal sets `unsubscribed_at`.
-- Server-only: RLS on, no policies, no grants to `anon` or `authenticated`.
-
-Export for the launch email (Supabase > SQL Editor):
-
-```sql
-select email, marketing_consent from public.launch_signups where unsubscribed_at is null order by created_at;
-```
+- `POST /api/signup`: the person becomes a Resend contact in the segment **First access** (and **News opt-in** if
+  they ticked the unticked marketing box). Segments are created automatically on first use. New contacts get one
+  confirmation email from `Doorstep <tickets@doorsteptickets.com>`, reply-to `support@`. Someone already on the list
+  is never emailed twice.
+- `POST /api/partner`: promoter / venue enquiries are emailed to `partners@doorsteptickets.com` (override with
+  `PARTNERS_TO`) with reply-to set to the enquirer. No auto-reply.
+- Optional consent record in Supabase (`public.launch_signups`, migration `20261124130000_launch_signups.sql`) when
+  `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set.
+- **Only doorsteptickets.com and www store or send anything.** preview.doorsteptickets.com and *.vercel.app are demos:
+  the forms say thanks and nothing is saved or sent. `HOLDING_PREVIEW=1` forces demo mode everywhere.
+- Tests: `tests/unit/holding-signup.test.ts`, `tests/db/40_launch_signups.sql`.
 
 ### Bot protection
-Same-origin check, a hidden honeypot field, a minimum fill time (2.5s), and at most 5 attempts per IP per hour,
-enforced in the database. IPs are never stored, only a salted SHA-256 hash, and those rows are deleted after a day.
-Bots get a fake "ok" so they learn nothing. If spam still gets through, add Cloudflare Turnstile.
+Same-origin check, hidden honeypot field, minimum fill time (2.5s), and a per-IP hourly limit (5 sign-ups, 3
+enquiries). IPs are only used as a salted hash. Bots get a fake "ok". If spam gets through, add Cloudflare Turnstile.
 
-## Deploying (needs Nathan's go-ahead before it goes on doorsteptickets.com)
+## Hosting
 
-1. Run the migration on Supabase staging (SQL Editor, paste the migration file, Run).
-2. Vercel: new project from `EEGVentures/doorstep`, team EEG VENTURES, **Root Directory `holding`**, Framework "Other", no build command.
-3. Environment variables (Production + Preview): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (the `sb_secret_...` key), and
-   optionally `HOLDING_IP_SALT` (any long random string). Never prefix these with `VITE_`.
-4. Check the preview URL, then add `doorsteptickets.com` (+ `www`) to this project. At launch, move the domain to the app project.
+Vercel project `doorstep-holding` (team EEG VENTURES), Root Directory `holding`, no build step.
+Environment variables: `RESEND_API_KEY` (a **Full access** Resend key, needed for contacts and segments; never `VITE_`),
+optional `HOLDING_IP_SALT`, `PARTNERS_TO`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+DNS (GoDaddy): `A @ 216.198.79.1`, `CNAME www -> <value Vercel shows>`, `CNAME preview -> <value Vercel shows>`.
+At launch, move doorsteptickets.com to the app project.
 
 ## Before it goes live
 - Photos are the placeholder set from the app demo (AI reference images). Swap for licensed photos.

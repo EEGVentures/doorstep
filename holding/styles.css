@@ -346,3 +346,44 @@ a { color: var(--ink); }
 .legal p, .legal li { margin-top: 10px; font-size: 16px; line-height: 1.6; }
 .legal ul { padding-left: 20px; margin: 0; }
 .legal a { text-underline-offset: 3px; }
+
+/* ---------- Partner enquiry form (on ink) ---------- */
+.partners { align-items: start; }
+.partners-action { width: 100%; }
+.pform { display: grid; gap: 14px; }
+.pf-roles { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.pf-roles legend { margin-bottom: 8px; }
+.pf-label { display: block; font-size: 14px; font-weight: 500; color: rgba(255,255,255,.78); margin-bottom: 6px; }
+.pf-chip { position: relative; cursor: pointer; }
+.pf-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pf-chip span { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 16px; border-radius: 999px; font-size: 14px; font-weight: 500;
+  border: 1px solid rgba(255,255,255,.3); color: #fff; transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out), border-color 150ms var(--ease-out); }
+.pf-chip input:checked + span { background: #fff; color: var(--ink); border-color: #fff; }
+.pf-chip input:focus-visible + span { outline: 3px solid #fff; outline-offset: 2px; }
+.pf-chip:active span { transform: scale(.97); }
+.pf-row { display: grid; gap: 14px; }
+.pf-field input, .pf-field textarea {
+  width: 100%; border-radius: 14px; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.07); color: #fff;
+  padding: 12px 14px; font: 400 16px/1.4 var(--ui); transition: border-color 150ms var(--ease-out), background-color 150ms var(--ease-out);
+}
+.pf-field input { height: 48px; }
+.pf-field textarea { resize: vertical; min-height: 96px; }
+.pf-field input:focus, .pf-field textarea:focus { outline: none; border-color: #fff; background: rgba(255,255,255,.12); }
+.pf-field [aria-invalid=true] { border-color: #ff8a8e; }
+.pf-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 4px; }
+.pf-actions .partners-note { margin: 0; }
+.partners-note a { color: #fff; text-underline-offset: 3px; }
+.btn-light { cursor: pointer; background: transparent; font-family: var(--display); }
+.btn-light:disabled { opacity: .6; cursor: progress; }
+.pf-msg { min-height: 1.2em; font-size: 14px; font-weight: 500; color: #ffb3b5; }
+.pf-done { border-radius: 20px; padding: 22px 24px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); animation: rise 420ms var(--ease-out) both; }
+.pf-done:focus { outline: none; }
+.pf-done h3 { color: #fff; font-size: 20px; font-weight: 600; }
+.pf-done p { margin-top: 6px; color: rgba(255,255,255,.78); }
+@media (min-width: 640px) { .pf-row { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 980px) {
+  .partners { grid-template-columns: 1fr 1.1fr; gap: 48px; }
+  .partners-action { justify-self: stretch; }
+  .partners-copy { padding-top: 8px; position: sticky; top: 24px; }
+}
+@media (max-width: 420px) { .btn-light { white-space: normal; } }

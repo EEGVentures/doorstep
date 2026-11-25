@@ -156,11 +156,31 @@
         <p>Doorstep is a discreet way to fill a room. Release seats when it suits you, and we’ll report back on every person through the door.</p>
       </div>
       <div class="partners-action">
-        <a class="btn-light" href="mailto:partners@doorsteptickets.com?subject=Doorstep%20promoter%20or%20venue%20enquiry">
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          partners@doorsteptickets.com
-        </a>
-        <p class="partners-note">Tell us a little about your venue or shows and we’ll be in touch.</p>
+        <form class="pform" id="pform" action="/api/partner" method="post" novalidate>
+          <fieldset class="pf-roles">
+            <legend class="pf-label">I’m a</legend>
+            <label class="pf-chip"><input type="radio" name="role" value="promoter" checked><span>Promoter</span></label>
+            <label class="pf-chip"><input type="radio" name="role" value="venue"><span>Venue</span></label>
+            <label class="pf-chip"><input type="radio" name="role" value="other"><span>Something else</span></label>
+          </fieldset>
+          <div class="pf-row">
+            <div class="pf-field"><label class="pf-label" for="pf-name">Your name</label><input id="pf-name" name="name" type="text" autocomplete="name" maxlength="120" required></div>
+            <div class="pf-field"><label class="pf-label" for="pf-email">Email</label><input id="pf-email" name="email" type="email" autocomplete="email" maxlength="254" required></div>
+          </div>
+          <div class="pf-field"><label class="pf-label" for="pf-company">Venue or company</label><input id="pf-company" name="company" type="text" autocomplete="organization" maxlength="160"></div>
+          <div class="pf-field"><label class="pf-label" for="pf-message">What would you like to talk about?</label><textarea id="pf-message" name="message" rows="3" maxlength="3000" required></textarea></div>
+          <div class="hp" aria-hidden="true"><label for="pf-website">Leave this empty</label><input id="pf-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+          <div class="pf-actions">
+            <button class="btn-light" type="submit"><span class="pf-btn-label">Send to our partners team</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <p class="partners-note">Or email <a href="mailto:partners@doorsteptickets.com">partners@doorsteptickets.com</a></p>
+          </div>
+          <p class="pf-msg" id="pf-msg" role="status" aria-live="polite"></p>
+        </form>
+        <div class="pf-done" id="pf-done" hidden tabindex="-1">
+          <h3>Thanks, that’s with our partners team.</h3>
+          <p>We’ll reply from partners@doorsteptickets.com.</p>
+        </div>
       </div>
     </section>
   </main>
