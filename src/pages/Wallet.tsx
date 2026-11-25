@@ -4,7 +4,7 @@ import { Navigate, useSearchParams } from 'react-router-dom';
 import QRCode from 'qrcode';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
-import { eventDateLong, eventTime, untilText } from '@/lib/format';
+import { eventDateLong, eventTime } from '@/lib/format';
 import { Empty, Loader, Notice, PrimaryLink } from '@/components/ui';
 
 type WalletTicket = {
@@ -35,7 +35,7 @@ function countdown(ms: number) {
 
 /**
  * Door pass: the ticket is a door. Gable top like the emblem, ink panel, a countdown to doors,
- * the code in the letterbox panel once it's released (48h before doors), and the gradient doorstep line underneath.
+ * the code in the letterbox panel from the moment of purchase (25 Nov 2026), and the gradient doorstep line underneath.
  */
 /** Nathan's copy rule (5 Nov 2026): wherever "door pass" appears, follow it with this line. */
 export const PASS_LINE = 'Your digital ticket, in the Doorstep app and Apple Wallet.';
@@ -77,8 +77,8 @@ function DoorPass({ t }: { t: WalletTicket }) {
               : revealed ? (<><Qr value={t.barcode!} /><p className="mt-2 font-mono text-lg tracking-[0.2em]">{t.barcode}</p><p className="text-xs text-muted">Show this at the door. Brightness up helps.</p></>)
               : (
                 <div className="py-4">
-                  <p className="font-semibold">Your code appears here {untilText(t.reveal_at)}</p>
-                  <p className="text-sm tabular-nums text-muted">{eventDateLong(t.reveal_at, t.timezone)}, {eventTime(t.reveal_at, t.timezone)}. We’ll email you when it lands.</p>
+                  <p className="font-semibold">Your code is on its way</p>
+                  <p className="text-sm text-muted">It appears here as soon as your payment is confirmed, usually within a minute.</p>
                 </div>
               )}
             <p className="mt-3 border-t border-line pt-3 text-xs text-muted">{t.ticket_type} · {[t.holder_first_name, t.holder_last_name].filter(Boolean).join(' ')}</p>
@@ -95,8 +95,8 @@ function PassExplainer() {
   const [open, setOpen] = useState(() => { try { return localStorage.getItem('ds_pass_help') !== 'closed'; } catch { return true; } });
   const toggle = () => { setOpen((o) => { try { localStorage.setItem('ds_pass_help', o ? 'closed' : 'open'); } catch { /* fine */ } return !o; }); };
   const steps = [
-    ['Booked', 'Your pass appears here straight away, counting down to doors.'],
-    ['Your code lands 48 hours before doors', 'We email you when it does. Holding it back until then stops passes being copied or resold.'],
+    ['Booked', 'Your pass and its code appear here as soon as you pay, counting down to doors.'],
+    ['Add it to Apple Wallet', 'Keep it on your phone, ready for the night. We send a reminder the day before.'],
     ['Show it at the door', 'Staff scan the code on your phone. Turn your brightness up and you’re in.'],
   ];
   return (

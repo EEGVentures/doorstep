@@ -7,7 +7,7 @@ The Base44 export (Oct 2026) is the reference. Everything below is listed in rou
 | Discover, EventDetail, Wallet, Account, Login/Register | Rebuilt | New brand, real data via Supabase |
 | create-checkout, stripe-webhook, refund-order | Rebuilt | Audit bugs fixed: race, 10-min expiry, idempotency, barcode reuse |
 | auto-close-off, generate-export-csv | Rebuilt | Standard CSV, versioned schedule, sold-out events included, direct to recipient |
-| send-reveal-notifications | Rebuilt | `tickets-ready` email scheduled at doors minus 48h |
+| send-reveal-notifications | Replaced | Door passes arrive with `order-confirmed` (25 Nov 2026); `event-reminder` goes the day before doors |
 | BuildShow (create event) | **To port** | Admin form writing `events` + `ticket_types`; see docs/ADMIN-PORTAL.md |
 | BulkUpload | **To port** | CSV/AI-assisted event import |
 | Admin, LiveDashboard, Insights | **To port** | Sales, occupancy and channel charts; read from views |

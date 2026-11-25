@@ -189,16 +189,18 @@ begin
 end $$;
 
 -- 11. Row-level security --------------------------------------------------
--- Partner fan (b) has 2 tickets for the Soon Show (doors in 24h, so revealed).
--- Member (a) has 1 valid ticket for the Later Show (doors in 3 days, not revealed).
+-- Partner fan (b) has 2 tickets for the Soon Show (doors in 24h).
+-- Member (a) has 1 valid ticket for the Later Show (doors in 3 days). Door passes show on purchase
+-- (25 Nov 2026), so both see their codes now, however far off the show is.
 set role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
 do $$ begin
   assert (select count(*) from public.profiles) = 1, 'sees only own profile';
   assert (select count(*) from public.orders where user_id <> auth.uid()) = 0, 'no other orders';
   assert (select count(*) from public.tickets where user_id <> auth.uid()) = 0, 'no other tickets';
-  assert (select count(*) from public.ticket_barcodes) = 0, 'barcode hidden before the 48h reveal';
-  assert (select count(*) from public.my_tickets where status = 'valid' and barcode is null) = 1, 'wallet shows ticket without code';
+  assert (select count(*) from public.ticket_barcodes) = 1, 'door pass code visible straight after purchase, days before doors';
+  assert (select count(*) from public.my_tickets where status = 'valid' and barcode is not null) = 1, 'wallet shows the code on purchase';
+  assert (select count(*) from public.my_tickets where status <> 'valid' and barcode is not null) = 0, 'no code for a refunded or revoked ticket';
   assert (select count(*) from public.affiliate_link_stats) = 0, 'customers cannot see partner stats';
   assert (select count(*) from public.partner_sales_ledger) = 0, 'customers cannot see the partner ledger';
   assert (select count(*) from public.event_listings) = 3, 'public listings';
@@ -209,7 +211,7 @@ update public.profiles set first_name = 'Mia B' where id = auth.uid();
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', false);
 do $$ begin
-  assert (select count(*) from public.ticket_barcodes) = 2, 'revealed inside 48h';
+  assert (select count(*) from public.ticket_barcodes) = 2, 'own codes visible';
   assert (select count(*) from public.my_tickets where barcode is not null) = 2, 'wallet shows codes';
 end $$;
 

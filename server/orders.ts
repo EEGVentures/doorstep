@@ -3,7 +3,8 @@ import { db } from './supabase.js';
 import { enqueueEmail } from './email/outbox.js';
 import { formatPence } from './stripe.js';
 
-const REVEAL_MS = 48 * 3600_000; // keep in step with public.reveal_lead()
+const REMINDER_MS = 24 * 3600_000; // reminder email goes the day before doors
+const REMINDER_MIN_GAP_MS = 2 * 3600_000; // no reminder if the order email went out less than ~2 hours earlier
 
 const fmt = (d: Date, tz: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('en-GB', { timeZone: tz, ...o }).format(d);
 export const dateLong = (d: Date, tz = 'Europe/London') => fmt(d, tz, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -60,26 +61,28 @@ function eventVars(o: OrderFull) {
 export async function queuePaidOrderEmails(orderId: string) {
   const o = await loadOrder(orderId);
   const doors = new Date(o.event.doors_at);
-  const revealAt = new Date(doors.getTime() - REVEAL_MS);
   const vars = {
     ...eventVars(o),
     unit_price: formatPence(o.unit_price_pence),
     line_total: formatPence(o.subtotal_pence),
     fee_total: formatPence(o.fee_total_pence),
     order_total: formatPence(o.total_pence),
-    reveal_time: `${dateShort(revealAt, o.event.venue.timezone)}, ${timeOf(revealAt, o.event.venue.timezone)}`,
   };
   await enqueueEmail({ template: 'order-confirmed', to: o.profile.email, userId: o.user_id, payload: vars, dedupeKey: `order-confirmed:${o.id}` });
-  // Tickets-ready goes at the reveal (or now, if the order was placed inside the 48 hours).
-  await enqueueEmail({
-    template: 'tickets-ready', to: o.profile.email, userId: o.user_id, payload: vars, dedupeKey: `tickets-ready:${o.id}`,
-    sendAfter: revealAt > new Date() ? revealAt : new Date(),
-  });
+  // Door passes are in the order email. A reminder follows the day before doors, unless the
+  // show is so close that it would land right after the order email.
+  const remindAt = new Date(doors.getTime() - REMINDER_MS);
+  if (remindAt.getTime() - Date.now() >= REMINDER_MIN_GAP_MS) {
+    await enqueueEmail({
+      template: 'event-reminder', to: o.profile.email, userId: o.user_id, payload: vars, dedupeKey: `event-reminder:${o.id}`,
+      sendAfter: remindAt,
+    });
+  }
 }
 
-/** Stops a scheduled tickets-ready email for a refunded order. */
+/** Stops a scheduled reminder email for a refunded order. */
 export async function cancelPendingOrderEmails(orderId: string) {
-  await db().from('email_outbox').update({ status: 'cancelled' }).eq('dedupe_key', `tickets-ready:${orderId}`).eq('status', 'queued');
+  await db().from('email_outbox').update({ status: 'cancelled' }).eq('dedupe_key', `event-reminder:${orderId}`).eq('status', 'queued');
 }
 
 export async function queueEventCancelledEmail(orderId: string, refundPence: number) {

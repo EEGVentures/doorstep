@@ -48,7 +48,7 @@ Nathan asked for the app to feel like Doorstep and not a listings page. Three id
 2. **The door.** The emblem's gable is the shape system:
    - The lead tile is house-shaped, with the date as the house sign. The lead is always the soonest night with a photo, and a photo-less lead goes ink.
    - Tapping a tile opens the event like double doors (`html[data-vt=door]`), while the photo grows into the hero. The event page is seeded from the tapped listing, so the transition never lands on a skeleton.
-   - Tickets are **door passes**: an ink door with the gable, a live countdown to doors, the code in a white letterbox panel from 48h, and the coral-to-amber "doorstep line" underneath. The gradient is used only as a line.
+   - Tickets are **door passes**: an ink door with the gable, a live countdown to doors, the code in a white letterbox panel from the moment of purchase, and the coral-to-amber "doorstep line" underneath. The gradient is used only as a line.
 3. **Voice.** Labels speak like a local friend:
    - "Fancy it?" on the booking panel;
    - "This one's for members" when booking needs a membership;
@@ -61,7 +61,7 @@ The preview build (`scripts/build-demo.sh`) shows all of it with sample data.
 
 - **Location first.** "Use my location" is the main way in: the browser's location here, and expo-location in the iOS app. It's rounded to about 1km and named by the nearest postcode district. Typing a postcode is the fallback, and it opens automatically if location is refused.
 - **No house-shaped tile, no House favourite.** The House favourite outline and label were removed on 24 Nov 2026 (Nathan: messy). The lead is now simply the soonest night with a photo, as a big plain tile; every other tile is a same-size thumbnail. The `events.house_favourite` column is left in the database, unused.
-- **Door passes explained.** The wallet opens with "How door passes work" in three steps with gradient-ring numbers: booked, code lands 48h before doors, show it at the door. It can be hidden, and that choice is remembered on the device.
+- **Door passes explained.** The wallet opens with "How door passes work" in three steps with gradient-ring numbers: booked (code shows straight away), add it to Apple Wallet, show it at the door. It can be hidden, and that choice is remembered on the device.
 
 ### City tabs replace location (Nathan, 4 Nov 2026, 18:45)
 

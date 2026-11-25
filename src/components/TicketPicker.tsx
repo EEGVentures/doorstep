@@ -58,7 +58,7 @@ export function TicketPicker({ types, affiliateCode, maxPerOrder, ctaLabel = 'Bo
       </div>
       {error && <Notice tone="error">{error}</Notice>}
       <PrimaryButton onClick={go} disabled={busy || !t}>{busy ? 'Holding your tickets' : ctaLabel}</PrimaryButton>
-      <p className="text-xs text-muted">We hold your tickets for 30 minutes while you pay. Your tickets appear in your wallet 48 hours before doors.</p>
+      <p className="text-xs text-muted">We hold your tickets for 30 minutes while you pay. Your door passes appear in your wallet as soon as you pay.</p>
     </div>
   );
 }

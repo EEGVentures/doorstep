@@ -60,20 +60,20 @@ const eventFor = (slug: string) => {
       { id: `${l.id}-vip`, name: 'Front row', price_pence: 2400 + i * 100, fee_pence: 200, face_value_pence: 3500, capacity: 10, sold: 10, held: 0, max_per_order: 4, sort_order: 1 },
     ] };
 };
-// Two passes for the member's wallet: one inside the 48h window (code showing), one still counting down.
+// Two passes for the member's wallet. Codes show from purchase (25 Nov 2026).
 const ticket = (l: typeof listings[number], barcode: string | null, ref: string) => ({
   id: `t-${l.id}`, status: 'valid', order_ref: ref, ticket_type: 'General admission', event_title: l.title, event_slug: l.slug, image_url: l.image_url,
-  starts_at: l.starts_at, doors_at: l.doors_at, reveal_at: new Date(new Date(l.doors_at).getTime() - 48 * 3600e3).toISOString(),
+  starts_at: l.starts_at, doors_at: l.doors_at, reveal_at: new Date().toISOString(),
   venue_name: l.venue_name, venue_city: l.venue_city, timezone: 'Europe/London', holder_first_name: 'Preview', holder_last_name: 'Member', barcode,
 });
-const baseTickets = [ticket(listings[0], 'DS7K2M9QXH4P', 'DS-4F7Q2'), ticket(listings[2], null, 'DS-9C3KD')];
+const baseTickets = [ticket(listings[0], 'DS7K2M9QXH4P', 'DS-4F7Q2'), ticket(listings[2], 'DS9C3KDW7TNR', 'DS-9C3KD')];
 /** Video walkthrough only (localStorage ds_demo_checkout=1): a mock checkout page, then the bought passes land a moment after "payment". */
 const myTickets = () => {
   let bought: { slug: string; qty: number; ref: string; at: number } | null = null;
   try { bought = JSON.parse(store.get('ds_demo_bought') ?? 'null'); } catch { /* ignore */ }
   if (!bought || !bought.at) return baseTickets;
   const l = listings.find((x) => x.slug === bought!.slug) ?? listings[1];
-  const fresh = Array.from({ length: bought.qty }, (_, k) => ({ ...ticket(l, null, bought!.ref), id: `t-new-${k}` }));
+  const fresh = Array.from({ length: bought.qty }, (_, k) => ({ ...ticket(l, `DSDEMO${String(k).padStart(2, '0')}PASS`, bought!.ref), id: `t-new-${k}` }));
   return [...fresh, ...baseTickets].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 };
 
