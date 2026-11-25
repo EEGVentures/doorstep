@@ -16,3 +16,9 @@ enable_signup = true
 enable_confirmations = false
 double_confirm_changes = true
 secure_password_change = true
+
+# Branded reset email (built by scripts/email-design/gen.py). The hosted project needs this set too:
+# Dashboard > Authentication > Email Templates > Reset Password, or a config push.
+[auth.email.template.recovery]
+subject = "Reset your Doorstep password"
+content_path = "./supabase/templates/recovery.html"
