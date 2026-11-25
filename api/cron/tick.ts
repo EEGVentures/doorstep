@@ -1,5 +1,6 @@
 // GET /api/cron/tick  (Vercel Cron, every 5 minutes; needs the Pro plan for sub-daily schedules)
 // Expires stale holds, sends due emails and produces any close-off report that is due.
+import { timingSafeEqual } from 'node:crypto';
 import { env } from '../../server/env.js';
 import { handler, HttpError } from '../../server/http.js';
 import { db } from '../../server/supabase.js';
@@ -8,7 +9,10 @@ import { runCloseoffs } from '../../server/closeoff-runner.js';
 
 export default handler(['GET'], async (req) => {
   // Vercel sends "Authorization: Bearer <CRON_SECRET>" on cron calls.
-  if (req.headers.authorization !== `Bearer ${env().CRON_SECRET}`) throw new HttpError(401, 'UNAUTHORISED', 'Not allowed');
+  // Constant-time comparison so the secret cannot be guessed one character at a time.
+  const got = Buffer.from(String(req.headers.authorization ?? ''));
+  const want = Buffer.from(`Bearer ${env().CRON_SECRET}`);
+  if (got.length !== want.length || !timingSafeEqual(got, want)) throw new HttpError(401, 'UNAUTHORISED', 'Not allowed');
   const out: Record<string, unknown> = {};
   const { data: expired, error } = await db().rpc('expire_stale_reservations');
   if (error) throw error;

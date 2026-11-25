@@ -1,10 +1,20 @@
 // /api/ops?action=...  Operations actions for ops and admin staff. Every write is audited.
+import { randomInt } from 'node:crypto';
 import { z } from 'zod';
 import { bodyOf, fromDbError, handler, HttpError } from '../server/http.js';
 import { audit, db, requireStaff } from '../server/supabase.js';
 import { stripe } from '../server/stripe.js';
 import { cancelPendingOrderEmails, dateLong, queueEventCancelledEmail, queueEventChangedEmail, queueRefundIssuedEmail, timeOf } from '../server/orders.js';
 import { statementCsv, statementSummary, type LedgerRow } from '../server/partners.js';
+
+// Partner link codes come from a cryptographic random source, so nobody can predict or
+// enumerate another partner's link (6 characters from 32 symbols = about 1 billion codes).
+function randomCode(n: number) {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  for (let i = 0; i < n; i++) out += alphabet[randomInt(alphabet.length)];
+  return out;
+}
 
 async function refundOrder(orderId: string, reason: string, actor: string) {
   const { data: o } = await db().from('orders').select('id, ref, status, total_pence, refunded_pence, stripe_payment_intent_id').eq('id', orderId).single();
@@ -164,7 +174,7 @@ export default handler(['GET', 'POST'], async (req, res) => {
       }).parse);
       const { data: partner } = await db().from('partners').select('name, status').eq('id', b.partnerId).single();
       if (partner?.status !== 'approved') throw new HttpError(409, 'PARTNER_NOT_APPROVED', 'An admin must approve this partner first.');
-      const code = b.code ?? `${partner.name.replace(/[^A-Za-z0-9]/g, '').slice(0, 10).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+      const code = b.code ?? `${partner.name.replace(/[^A-Za-z0-9]/g, '').slice(0, 10).toUpperCase()}-${randomCode(6)}`;
       const { data, error } = await db().from('affiliate_links').insert({
         partner_id: b.partnerId, event_id: b.eventId, code, max_per_order: b.maxPerOrder, expires_at: b.expiresAt ?? null, created_by: staff.id,
       }).select().single();
