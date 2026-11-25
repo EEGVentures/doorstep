@@ -37,7 +37,8 @@ enquiries). IPs are only used as a salted hash. Bots get a fake "ok". If spam ge
 
 Vercel project `doorstep-holding` (team EEG VENTURES), Root Directory `holding`, no build step.
 Environment variables: `RESEND_API_KEY` (a **Full access** Resend key, needed for contacts and segments; never `VITE_`),
-optional `HOLDING_IP_SALT`, `PARTNERS_TO`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+optional `HOLDING_IP_SALT`, `PARTNERS_TO`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `COMPANY_LEGAL_NAME`,
+`COMPANY_NUMBER`, `COMPANY_ADDRESS` for the confirmation email footer (left out until set).
 DNS (GoDaddy): `A @ 216.198.79.1`, `CNAME www -> <value Vercel shows>`, `CNAME preview -> <value Vercel shows>`.
 At launch, move doorsteptickets.com to the app project.
 

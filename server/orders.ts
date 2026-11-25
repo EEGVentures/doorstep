@@ -43,7 +43,7 @@ function eventVars(o: OrderFull) {
     venue_area: o.event.venue.city,
     venue_address: address,
     maps_url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${o.event.venue.name}, ${address}`)}`,
-    event_image_url: o.event.image_url || `${site}/email-assets/st-booked.png`,
+    event_image_url: o.event.image_url || `${site}/email-assets/event-fallback.jpg`,
     qty: String(o.quantity),
     ticket_type: o.ticket_type_name,
     order_url: `${site}/wallet?order=${o.ref}`,

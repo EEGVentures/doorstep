@@ -4,7 +4,7 @@ import { TEMPLATES, type TemplateId } from './templates.generated.js';
 export const SUBJECTS: Record<TemplateId, string> = {
   'welcome': 'Welcome to Doorstep, {{first_name}}',
   'order-confirmed': 'You’re going to {{event_name}}',
-  'tickets-ready': 'Your tickets for {{event_name}} have landed',
+  'tickets-ready': 'Your door passes for {{event_name}} have landed',
   'event-cancelled': 'You’ve been refunded: {{event_name}} is cancelled',
 };
 

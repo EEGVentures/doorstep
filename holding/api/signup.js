@@ -3,7 +3,8 @@
 // marketing box they are also added to "News opt-in". New contacts get one confirmation email from tickets@.
 // Supabase (optional, when SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are set): also records consent wording and
 // time in public.launch_signups, with the database's per-IP limit.
-// Env: RESEND_API_KEY (full access, server only, never VITE_), optional HOLDING_IP_SALT, HOLDING_PREVIEW=1 for a demo.
+// Env: RESEND_API_KEY (full access, server only, never VITE_), optional HOLDING_IP_SALT, HOLDING_PREVIEW=1 for a demo,
+// optional COMPANY_LEGAL_NAME, COMPANY_NUMBER, COMPANY_ADDRESS for the email footer.
 // Bot protection: same-origin check, honeypot, minimum fill time, per-IP hourly limit. Never logs email addresses.
 import { isPreview, send, sameOrigin, readBody, looksLikeBot, ipHash, overLimit, clean, resend, EMAIL_RE, FROM, REPLY_TO } from './_lib.js';
 import { confirmationEmail } from './_email.js';
